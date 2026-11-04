@@ -280,6 +280,8 @@ LABELS = ["USB-C 3000 Cable"]
         "Revenue reached 1.2M.",
         "Its share was 34.56%.",
         "Its share was 35%.",
+        "Its share was 34.6%.",
+        "Total revenue was 1,234,567.89, and Pen earned 987.50.",
         "Growth was 12.5%.",
         "The USB-C 3000 Cable earned 987.5.",
         "In 2025-03, sales rose.",

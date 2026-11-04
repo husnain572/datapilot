@@ -72,8 +72,10 @@ Reply with one JSON object with these fields:
 - recommendations: list of {action, evidence}. Give the number of recommendations the question asks for, or up to three.
 
 Strict rules:
-- Use only numbers that appear in the results. Never calculate, estimate, or round into a new number. Copy each one as given, \
-or rounded to two decimal places at most. Don't write totals, differences, or percentages that aren't in the results.
+- Use only numbers that appear in the results. Don't calculate new totals, differences, or percentages.
+- Write numbers for people to read: thousands separators and at most two decimal places (674,142.65). \
+Write a share stored as a fraction as a percentage with one decimal place (0.2984 becomes 29.8%).
+- Keep each statement short and clear. Don't mention a share unless it adds something.
 - Keep findings separate from recommendations.
 - A pattern doesn't prove a cause. Don't say one thing caused another. Say what the data shows, and suggest testing ideas.
 - If something isn't in the results, don't mention it.
