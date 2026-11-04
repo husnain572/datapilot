@@ -1,0 +1,27 @@
+[project]
+name = "datapilot"
+version = "0.1.0"
+description = "AI data analyst that runs generated code in a sandbox and verifies its results."
+readme = "README.md"
+requires-python = ">=3.11,<3.12"
+dependencies = [
+    "fastapi>=0.162.0",
+    "httpx>=0.28.1",
+    "pydantic-settings>=2.16.2",
+    "python-dotenv>=1.2.4",
+    "streamlit>=1.66.1",
+    "uvicorn>=0.54.0",
+]
+
+[tool.uv]
+# DataPilot is an application we run, not a library we publish.
+package = false
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+
+[dependency-groups]
+dev = [
+    "pytest>=9.2.0",
+]
