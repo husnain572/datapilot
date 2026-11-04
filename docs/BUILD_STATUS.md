@@ -4,17 +4,17 @@
 
 ## Where to continue
 
-1. The owner makes the first commit (repository → commit lesson).
-2. The owner creates accounts: GitHub, lablab.ai and Discord, Vultr with the gift code.
+1. The owner creates an SSH key, adds it to GitHub, and pushes to a private repo.
+2. The owner creates accounts: lablab.ai and Discord, Vultr with the gift code.
 3. Confirm the exact submission deadline.
-4. Connect GitHub and push, then start Phase 8a (early deploy).
+4. Start Phase 8a (early deploy), reusing the same SSH key for the Vultr server.
 
 ## Progress
 
 | Phase | Status | Notes |
 |---|---|---|
 | 0 Docs | Done, awaiting owner review | All documents written |
-| 1 Foundation | Code done and tested; **first commit and GitHub still to do** | See results below |
+| 1 Foundation | Code done and tested, first commit made (`d30a5b3`); **GitHub push still to do** | See results below |
 | 8a Early deploy | Not started | Needs a Vultr account |
 | 2 Upload and profiling | Not started | |
 | 3 Sandbox | Not started | Needs the VM, since Docker runs only there |
@@ -52,7 +52,6 @@ Real page against real backend: "Backend connected.", 0 exceptions
 ## Known issues
 
 - pytest shows a deprecation warning from a library: Starlette's test client plans to move away from `httpx`. It doesn't affect the app, so we've left it for now.
-- The Git email is a placeholder (`husnainmalikawan@example.com`). GitHub won't link commits to the owner's profile until it's changed.
 - `~/.git` exists in the home folder. It doesn't affect this project, but `git add` run from the home folder could stage personal files.
 
 ## Open questions
