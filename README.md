@@ -24,10 +24,10 @@ In testing, the AI's first attempt reported 48 missing cells when the real count
 ## Try it
 
 1. Open the live demo and click **Try the sample sales dataset**, or upload your own CSV.
-2. Enter the access code in the sidebar.
+2. Enter the access code near the top of the page.
 3. Click **Use the sample question**, then **Analyze**.
 4. See the plan, code, logs, verified figures, interactive charts, insights, and downloads.
-5. Open **Containment Lab** to watch the sandbox stop real attacks.
+5. Open the **Containment Lab** tab to watch the sandbox stop real attacks.
 
 ![The Containment Lab showing contained attacks](docs/screenshots/containment-lab.png)
 

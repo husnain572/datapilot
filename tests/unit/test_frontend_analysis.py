@@ -266,3 +266,14 @@ def test_html_in_ai_text_cannot_become_page_markup(run_page):
     shown = " ".join(item.value for item in page.markdown if "alert" in item.value)
     assert "<script" not in shown
     assert "<img" not in shown
+
+
+def test_apostrophes_in_ai_text_are_encoded_once(run_page):
+    record = {**COMPLETED, "insights": {**COMPLETED["insights"], "observations": ["The server's memory & more"]}}
+
+    page = run_page(FakeBackend(record))
+
+    shown = next(item.value for item in page.markdown if "memory" in item.value)
+    assert "server&#39;s" in shown
+    assert "&#38; more" in shown
+    assert "&#35;" not in shown  # Double encoding is what displayed "server&#x27;s".

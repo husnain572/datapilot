@@ -30,6 +30,7 @@ DEMO_QUESTION = (
 )
 CAVEAT = "These findings show patterns in this dataset. They don't prove what caused them."
 STYLE_FILE = Path(__file__).with_name("style.css")
+UNSAFE_HTML_CHARACTERS = set("&<>\"'\\`*_{}[]()#+-.!|~$:")
 VERIFICATION_LABELS = {
     "verified": "✅ Verified",
     "mismatch": "❌ Mismatch",
@@ -51,8 +52,7 @@ def plain(text: object) -> str:
 
 def safe_html(text: object) -> str:
     """Show untrusted text literally inside our HTML, with no tags, links, or images."""
-    escaped = html.escape(str(text), quote=True)
-    return re.sub(r"[\\`*_{}\[\]()#+\-.!|~$:]", lambda match: f"&#{ord(match.group())};", escaped)
+    return "".join(f"&#{ord(char)};" if char in UNSAFE_HTML_CHARACTERS else char for char in str(text))
 
 
 def card(title: str, body: str = "", label: str = "") -> str:
