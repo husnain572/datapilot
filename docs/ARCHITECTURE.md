@@ -49,7 +49,7 @@ Browser ──HTTPS──> Caddy ──> Streamlit (screens)
 | Plain Python workflow instead of LangGraph | The steps are fixed and retries are limited, so a simple loop is easier to read and debug |
 | Separate executor service | Docker access amounts to root on the server, so neither the backend nor the sandbox gets it |
 | Docker runs only on the Vultr VM | Current Docker Desktop doesn't support macOS 12, and generated code must never run on the owner's Mac |
-| SQLite plus files on disk | No database server to run, which suits one VM |
+| Files on disk, no database | One folder per dataset with a JSON details file. There's no database to run, which suits one VM. |
 | Plotly JSON and PNG charts only | Generated HTML could run scripts in a user's browser |
 | Declared checks, no `eval` | Lets the backend recalculate figures without running AI-written code |
 

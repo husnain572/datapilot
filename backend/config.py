@@ -14,6 +14,12 @@ class Settings(BaseSettings):
     app_env: Literal["local", "production"] = "local"
     data_dir: Path = Path("data")
 
+    # Upload limits. Uploaded files are untrusted, so everything has a cap.
+    max_upload_bytes: int = 25 * 1024 * 1024
+    max_rows: int = 500_000
+    max_columns: int = 200
+    dataset_ttl_hours: int = 24
+
     # SecretStr hides the key if settings are ever printed or logged.
     vultr_serverless_inference_api_key: SecretStr | None = None
     vultr_inference_base_url: str = "https://api.vultrinference.com/v1"

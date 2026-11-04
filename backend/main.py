@@ -5,6 +5,7 @@ from contextlib import asynccontextmanager
 
 from fastapi import FastAPI
 
+from backend.api.datasets import router as datasets_router
 from backend.api.health import router as health_router
 from backend.config import get_settings
 
@@ -23,3 +24,4 @@ app = FastAPI(
     lifespan=lifespan,
 )
 app.include_router(health_router)
+app.include_router(datasets_router)

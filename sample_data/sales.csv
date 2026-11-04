@@ -1,0 +1,1011 @@
+order_date,product,quantity,unit_price,region
+2025-01-01,Keyboard,2,59.00,North
+2025-01-02,Webcam,5,79.00,East
+2025-01-02,USB-C Cable,7,15.00,West
+2025-01-02,Keyboard,7,59.00,North
+2025-01-04,Headset,7,119.00,East
+2025-01-04,Laptop,5,809.10,South
+2025-01-05,Monitor,4,236.55,West
+2025-01-05,Headset,2,119.00,West
+2025-01-06,Keyboard,1,59.00,East
+2025-01-06,Mouse,2,27.55,East
+2025-01-06,USB-C Cable,6,13.50,East
+2025-01-06,Webcam,2,75.05,North
+2025-01-07,Keyboard,1,59.00,West
+2025-01-07,Webcam,7,79.00,North
+2025-01-07,Standing Desk,4,429.00,North
+2025-01-07,Keyboard,6,59.00,South
+2025-01-07,Keyboard,4,59.00,North
+2025-01-07,Standing Desk,4,429.00,North
+2025-01-08,Laptop,6,854.05,North
+2025-01-08,USB-C Cable,2,14.25,North
+2025-01-08,Keyboard,3,56.05,North
+2025-01-09,Keyboard,8,59.00,South
+2025-01-09,Headset,1,107.10,North
+2025-01-09,Webcam,1,79.00,West
+2025-01-09,Keyboard,2,53.10,South
+2025-01-09,Mouse,7,26.10,East
+2025-01-10,USB-C Cable,4,14.25,North
+2025-01-10,Office Chair,6,161.10,North
+2025-01-10,Office Chair,1,170.05,South
+2025-01-10,Webcam,7,79.00,East
+2025-01-11,USB-C Cable,2,14.25,West
+2025-01-11,USB-C Cable,8,13.50,North
+2025-01-11,Standing Desk,7,429.00,East
+2025-01-11,Docking Station,3,170.10,East
+2025-01-11,Keyboard,5,59.00,South
+2025-01-11,Docking Station,4,189.00,North
+2025-01-12,USB-C Cable,5,15.00,South
+2025-01-12,USB-C Cable,4,15.00,South
+2025-01-12,Webcam,5,79.00,North
+2025-01-12,Mouse,7,27.55,East
+2025-01-12,Docking Station,2,170.10,East
+2025-01-12,Monitor,3,249.00,East
+2025-01-13,Webcam,8,79.00,North
+2025-01-13,Headset,6,119.00,North
+2025-01-14,Office Chair,4,170.05,North
+2025-01-14,Mouse,2,29.00,North
+2025-01-14,Headset,7,119.00,North
+2025-01-15,USB-C Cable,2,13.50,East
+2025-01-15,Keyboard,5,56.05,South
+2025-01-15,USB-C Cable,1,15.00,North
+2025-01-15,Webcam,8,79.00,North
+2025-01-15,Docking Station,8,189.00,West
+2025-01-15,Mouse,1,29.00,North
+2025-01-15,USB-C Cable,3,15.00,West
+2025-01-15,Mouse,7,26.10,North
+2025-01-16,Headset,3,119.00,East
+2025-01-16,Webcam,8,,West
+2025-01-17,Headset,8,119.00,North
+2025-01-17,USB-C Cable,7,13.50,North
+2025-01-18,Webcam,3,75.05,East
+2025-01-18,Mouse,4,26.10,East
+2025-01-18,Headset,3,107.10,East
+2025-01-18,Office Chair,6,170.05,North
+2025-01-19,Laptop,7,854.05,West
+2025-01-19,USB-C Cable,7,15.00,East
+2025-01-19,Webcam,6,79.00,South
+2025-01-20,Docking Station,4,189.00,East
+2025-01-21,Webcam,4,79.00,East
+2025-01-21,Office Chair,8,170.05,West
+2025-01-22,Monitor,7,224.10,East
+2025-01-22,USB-C Cable,8,15.00,North
+2025-01-22,Docking Station,2,170.10,West
+2025-01-23,Keyboard,5,59.00,North
+2025-01-23,Keyboard,7,56.05,East
+2025-01-25,Standing Desk,6,429.00,North
+2025-01-26,Headset,3,113.05,West
+2025-01-27,Mouse,2,29.00,
+2025-01-27,Docking Station,8,189.00,West
+2025-01-27,USB-C Cable,8,15.00,North
+2025-01-28,Office Chair,2,179.00,West
+2025-01-28,Office Chair,8,179.00,West
+2025-01-28,Standing Desk,7,386.10,North
+2025-01-28,Office Chair,3,179.00,West
+2025-01-29,Monitor,6,249.00,North
+2025-01-30,Headset,8,119.00,East
+2025-01-30,Headset,5,113.05,North
+2025-01-30,Headset,3,119.00,North
+2025-01-31,Keyboard,5,56.05,East
+2025-01-31,Headset,2,119.00,North
+2025-01-31,Laptop,1,899.00,East
+2025-02-01,Keyboard,3,53.10,North
+2025-02-02,USB-C Cable,3,15.00,North
+2025-02-02,Keyboard,1,59.00,South
+2025-02-02,USB-C Cable,6,15.00,East
+2025-02-02,Webcam,1,79.00,North
+2025-02-03,Mouse,5,29.00,South
+2025-02-03,USB-C Cable,1,15.00,East
+2025-02-03,Mouse,3,29.00,East
+2025-02-04,Keyboard,4,59.00,North
+2025-02-04,Mouse,3,29.00,South
+2025-02-05,Keyboard,8,59.00,West
+2025-02-06,Mouse,2,,North
+2025-02-06,Office Chair,6,170.05,East
+2025-02-06,Office Chair,6,170.05,West
+2025-02-06,USB-C Cable,8,14.25,North
+2025-02-06,Keyboard,4,53.10,West
+2025-02-06,Standing Desk,5,407.55,West
+2025-02-07,USB-C Cable,7,15.00,East
+2025-02-07,USB-C Cable,7,15.00,East
+2025-02-07,USB-C Cable,6,15.00,East
+2025-02-07,Mouse,5,27.55,West
+2025-02-08,Headset,2,119.00,East
+2025-02-08,Headset,6,113.05,East
+2025-02-08,Headset,3,,West
+2025-02-10,Mouse,8,29.00,North
+2025-02-11,Laptop,4,899.00,East
+2025-02-11,USB-C Cable,7,15.00,West
+2025-02-12,Laptop,4,899.00,North
+2025-02-12,Webcam,5,79.00,East
+2025-02-13,Keyboard,6,53.10,East
+2025-02-13,Office Chair,2,179.00,East
+2025-02-13,Headset,6,113.05,South
+2025-02-14,Keyboard,4,56.05,South
+2025-02-15,USB-C Cable,6,15.00,North
+2025-02-15,Headset,1,119.00,East
+2025-02-15,Keyboard,3,59.00,East
+2025-02-16,USB-C Cable,1,13.50,West
+2025-02-16,Docking Station,1,170.10,East
+2025-02-17,Webcam,3,75.05,West
+2025-02-18,Docking Station,7,189.00,South
+2025-02-18,USB-C Cable,5,15.00,North
+2025-02-18,Keyboard,5,56.05,East
+2025-02-19,Webcam,8,75.05,North
+2025-02-19,Webcam,4,79.00,West
+2025-02-19,Office Chair,5,179.00,South
+2025-02-19,USB-C Cable,6,14.25,West
+2025-02-20,Monitor,5,249.00,South
+2025-02-20,Headset,2,107.10,East
+2025-02-20,Docking Station,3,189.00,South
+2025-02-20,Headset,1,119.00,West
+2025-02-21,Mouse,3,29.00,South
+2025-02-21,Keyboard,2,59.00,West
+2025-02-21,Monitor,4,249.00,East
+2025-02-23,Keyboard,3,59.00,South
+2025-02-23,Keyboard,7,59.00,West
+2025-02-23,Mouse,4,29.00,South
+2025-02-24,Standing Desk,8,429.00,South
+2025-02-25,Mouse,2,27.55,West
+2025-02-25,Office Chair,8,179.00,East
+2025-02-26,Monitor,,249.00,East
+2025-02-26,Standing Desk,7,429.00,North
+2025-02-27,Monitor,6,224.10,East
+2025-02-27,Office Chair,2,179.00,North
+2025-02-28,Keyboard,1,59.00,North
+2025-03-01,Office Chair,7,179.00,South
+2025-03-01,USB-C Cable,3,14.25,North
+2025-03-01,Monitor,6,224.10,West
+2025-03-02,USB-C Cable,2,15.00,South
+2025-03-02,Monitor,1,249.00,West
+2025-03-02,USB-C Cable,1,14.25,South
+2025-03-03,Webcam,8,79.00,East
+2025-03-03,Mouse,6,27.55,North
+2025-03-04,Keyboard,4,59.00,South
+2025-03-05,Mouse,3,26.10,South
+2025-03-05,Monitor,6,236.55,West
+2025-03-05,Office Chair,3,179.00,South
+2025-03-05,Headset,6,119.00,East
+2025-03-06,Keyboard,8,53.10,West
+2025-03-06,Office Chair,5,179.00,East
+2025-03-07,Headset,7,113.05,South
+2025-03-07,Mouse,8,27.55,West
+2025-03-07,Webcam,2,79.00,South
+2025-03-07,Mouse,3,26.10,South
+2025-03-07,Keyboard,8,56.05,West
+2025-03-08,Webcam,5,71.10,West
+2025-03-08,Office Chair,2,179.00,East
+2025-03-08,Docking Station,7,170.10,East
+2025-03-08,USB-C Cable,7,15.00,West
+2025-03-09,Headset,8,119.00,East
+2025-03-10,Headset,4,107.10,East
+2025-03-10,Standing Desk,7,429.00,North
+2025-03-11,Laptop,4,899.00,West
+2025-03-11,Keyboard,8,59.00,South
+2025-03-11,Keyboard,2,56.05,
+2025-03-12,Standing Desk,1,386.10,West
+2025-03-12,Keyboard,6,59.00,North
+2025-03-12,Office Chair,5,179.00,North
+2025-03-12,Keyboard,8,59.00,North
+2025-03-12,Docking Station,2,189.00,East
+2025-03-13,Laptop,1,854.05,North
+2025-03-13,Headset,8,119.00,North
+2025-03-13,Standing Desk,2,407.55,West
+2025-03-14,Office Chair,8,170.05,West
+2025-03-14,Mouse,1,26.10,East
+2025-03-15,Mouse,7,26.10,South
+2025-03-15,Docking Station,8,189.00,North
+2025-03-15,Headset,7,119.00,East
+2025-03-16,Monitor,4,249.00,East
+2025-03-16,Keyboard,6,56.05,South
+2025-03-16,Keyboard,6,59.00,North
+2025-03-16,Keyboard,7,59.00,North
+2025-03-17,Office Chair,3,179.00,North
+2025-03-17,Headset,8,119.00,West
+2025-03-17,Keyboard,2,56.05,East
+2025-03-17,Mouse,6,29.00,East
+2025-03-18,USB-C Cable,,15.00,East
+2025-03-18,Webcam,8,71.10,East
+2025-03-18,Mouse,1,29.00,West
+2025-03-18,Laptop,4,899.00,South
+2025-03-19,Mouse,4,29.00,East
+2025-03-20,Docking Station,6,170.10,West
+2025-03-20,Monitor,6,249.00,East
+2025-03-20,Keyboard,5,53.10,South
+2025-03-20,Laptop,8,899.00,North
+2025-03-20,Keyboard,2,53.10,North
+2025-03-21,Headset,2,119.00,South
+2025-03-21,USB-C Cable,5,15.00,North
+2025-03-21,USB-C Cable,2,14.25,West
+2025-03-22,USB-C Cable,3,14.25,North
+2025-03-22,Office Chair,7,161.10,North
+2025-03-22,Webcam,5,75.05,West
+2025-03-23,USB-C Cable,2,15.00,East
+2025-03-23,,5,386.10,East
+2025-03-24,Monitor,7,249.00,South
+2025-03-24,Webcam,2,79.00,North
+2025-03-24,Mouse,3,26.10,West
+2025-03-24,Keyboard,3,59.00,
+2025-03-24,Headset,6,119.00,East
+2025-03-25,Keyboard,6,59.00,East
+2025-03-25,Webcam,8,79.00,West
+2025-03-26,Keyboard,7,59.00,West
+2025-03-26,Webcam,4,79.00,North
+2025-03-27,Standing Desk,3,429.00,North
+2025-03-28,Docking Station,6,179.55,West
+2025-03-29,Standing Desk,,429.00,North
+2025-03-30,Keyboard,8,59.00,North
+2025-03-30,USB-C Cable,,15.00,West
+2025-03-30,Standing Desk,3,429.00,North
+2025-03-30,Headset,7,119.00,East
+2025-03-30,Docking Station,6,189.00,South
+2025-03-30,Monitor,8,249.00,East
+2025-03-30,Keyboard,1,56.05,North
+2025-03-31,Office Chair,1,161.10,East
+2025-03-31,Docking Station,,170.10,East
+2025-04-01,Mouse,1,29.00,North
+2025-04-01,USB-C Cable,3,15.00,North
+2025-04-01,Keyboard,2,53.10,North
+2025-04-01,Monitor,7,249.00,North
+2025-04-02,Mouse,1,27.55,North
+2025-04-03,Docking Station,3,189.00,North
+2025-04-03,Keyboard,7,59.00,East
+2025-04-04,Office Chair,6,179.00,South
+2025-04-04,Mouse,1,29.00,West
+2025-04-04,Mouse,5,26.10,West
+2025-04-04,Monitor,4,224.10,West
+2025-04-04,Mouse,1,27.55,North
+2025-04-06,Office Chair,1,179.00,West
+2025-04-07,Keyboard,5,53.10,West
+2025-04-07,Laptop,4,809.10,West
+2025-04-07,Webcam,5,71.10,West
+2025-04-07,Headset,4,119.00,North
+2025-04-08,Headset,2,107.10,South
+2025-04-08,Headset,1,119.00,West
+2025-04-09,USB-C Cable,7,15.00,North
+2025-04-09,Keyboard,6,56.05,South
+2025-04-09,USB-C Cable,6,14.25,South
+2025-04-09,USB-C Cable,6,14.25,South
+2025-04-10,Mouse,2,29.00,East
+2025-04-10,Headset,3,113.05,East
+2025-04-10,Keyboard,4,53.10,South
+2025-04-10,Mouse,2,29.00,East
+2025-04-11,Headset,2,113.05,North
+2025-04-11,Headset,7,119.00,West
+2025-04-13,Keyboard,8,56.05,North
+2025-04-14,Docking Station,7,189.00,West
+2025-04-14,USB-C Cable,3,15.00,East
+2025-04-16,Monitor,7,249.00,North
+2025-04-16,Mouse,1,29.00,West
+2025-04-16,Keyboard,1,53.10,East
+2025-04-16,Mouse,1,26.10,South
+2025-04-16,Keyboard,7,59.00,South
+2025-04-17,USB-C Cable,8,14.25,West
+2025-04-17,Headset,7,119.00,North
+2025-04-17,Keyboard,2,56.05,East
+2025-04-17,Mouse,8,29.00,North
+2025-04-17,Monitor,3,236.55,East
+2025-04-18,Mouse,4,29.00,West
+2025-04-18,Mouse,6,29.00,West
+2025-04-19,Office Chair,1,179.00,North
+2025-04-19,Keyboard,1,59.00,East
+2025-04-20,Webcam,1,71.10,East
+2025-04-20,Monitor,7,224.10,West
+2025-04-20,Mouse,8,29.00,North
+2025-04-20,Keyboard,6,53.10,North
+2025-04-21,Mouse,5,26.10,East
+2025-04-21,Mouse,8,29.00,North
+2025-04-21,Mouse,2,29.00,South
+2025-04-21,Mouse,3,27.55,West
+2025-04-22,Webcam,7,75.05,North
+2025-04-23,Office Chair,5,161.10,North
+2025-04-24,Monitor,1,249.00,East
+2025-04-24,Keyboard,2,59.00,North
+2025-04-24,Keyboard,7,59.00,North
+2025-04-24,Monitor,1,249.00,East
+2025-04-25,Docking Station,1,189.00,East
+2025-04-26,Mouse,6,29.00,West
+2025-04-27,Standing Desk,6,386.10,West
+2025-04-28,Keyboard,4,59.00,South
+2025-04-29,USB-C Cable,7,15.00,West
+2025-04-29,Keyboard,6,59.00,West
+2025-04-29,USB-C Cable,5,15.00,North
+2025-04-29,Webcam,4,79.00,South
+2025-04-29,Laptop,6,899.00,South
+2025-04-30,Mouse,7,26.10,West
+2025-04-30,Headset,5,119.00,North
+2025-04-30,Monitor,4,249.00,South
+2025-04-30,Webcam,3,79.00,West
+2025-04-30,Monitor,7,224.10,East
+2025-04-30,Monitor,8,236.55,South
+2025-05-01,Mouse,1,29.00,West
+2025-05-02,Office Chair,8,179.00,South
+2025-05-02,USB-C Cable,1,13.50,North
+2025-05-02,USB-C Cable,5,14.25,East
+2025-05-02,Laptop,3,809.10,South
+2025-05-03,Docking Station,7,179.55,West
+2025-05-03,Headset,3,119.00,North
+2025-05-03,Mouse,1,29.00,West
+2025-05-03,Monitor,3,249.00,East
+2025-05-04,Monitor,3,249.00,North
+2025-05-06,Office Chair,3,179.00,North
+2025-05-07,Keyboard,4,56.05,West
+2025-05-08,USB-C Cable,5,15.00,North
+2025-05-09,Mouse,5,29.00,West
+2025-05-09,Monitor,7,236.55,North
+2025-05-11,Mouse,5,29.00,North
+2025-05-11,Webcam,3,71.10,West
+2025-05-12,Webcam,6,79.00,West
+2025-05-13,Keyboard,4,59.00,
+2025-05-13,Standing Desk,7,407.55,East
+2025-05-13,Keyboard,8,59.00,North
+2025-05-13,Webcam,2,79.00,East
+2025-05-15,Keyboard,4,56.05,South
+2025-05-15,Office Chair,1,161.10,West
+2025-05-15,Monitor,5,249.00,East
+2025-05-15,Mouse,6,27.55,North
+2025-05-16,Headset,5,107.10,West
+2025-05-17,Standing Desk,8,429.00,East
+2025-05-18,Headset,5,107.10,West
+2025-05-18,Mouse,3,27.55,North
+2025-05-19,Keyboard,6,59.00,West
+2025-05-19,Office Chair,3,161.10,South
+2025-05-20,Headset,6,119.00,East
+2025-05-20,Mouse,6,27.55,West
+2025-05-20,Laptop,4,899.00,East
+2025-05-20,Laptop,4,899.00,North
+2025-05-20,Keyboard,5,59.00,North
+2025-05-20,Mouse,6,27.55,West
+2025-05-21,Office Chair,5,161.10,West
+2025-05-21,USB-C Cable,4,15.00,West
+2025-05-21,Monitor,4,249.00,North
+2025-05-21,Keyboard,3,59.00,North
+2025-05-22,USB-C Cable,2,14.25,East
+2025-05-23,Headset,1,119.00,North
+2025-05-23,Docking Station,7,179.55,South
+2025-05-23,USB-C Cable,3,15.00,North
+2025-05-23,USB-C Cable,2,14.25,West
+2025-05-23,Headset,6,107.10,East
+2025-05-23,Headset,4,107.10,East
+2025-05-24,Headset,8,107.10,West
+2025-05-24,Keyboard,7,53.10,East
+2025-05-24,Mouse,5,26.10,South
+2025-05-26,Mouse,1,29.00,East
+2025-05-26,Keyboard,8,59.00,West
+2025-05-27,USB-C Cable,2,13.50,North
+2025-05-28,Mouse,7,26.10,West
+2025-05-28,Mouse,4,29.00,North
+2025-05-29,USB-C Cable,1,15.00,North
+2025-05-29,Mouse,5,29.00,East
+2025-05-29,USB-C Cable,2,15.00,North
+2025-05-30,Docking Station,2,189.00,South
+2025-05-30,USB-C Cable,3,15.00,West
+2025-05-30,Laptop,8,899.00,West
+2025-05-30,Mouse,5,29.00,North
+2025-05-31,USB-C Cable,4,13.50,South
+2025-05-31,Docking Station,4,189.00,West
+2025-05-31,USB-C Cable,1,13.50,West
+2025-05-31,Monitor,7,249.00,South
+2025-05-31,Office Chair,5,179.00,East
+2025-06-02,Keyboard,5,59.00,West
+2025-06-02,,4,249.00,North
+2025-06-02,Mouse,4,29.00,West
+2025-06-02,Headset,4,113.05,South
+2025-06-02,Office Chair,2,179.00,West
+2025-06-02,Docking Station,2,189.00,South
+2025-06-03,Headset,2,119.00,North
+2025-06-05,Mouse,2,29.00,South
+2025-06-06,Keyboard,3,53.10,West
+2025-06-06,Office Chair,4,170.05,East
+2025-06-06,Webcam,8,75.05,East
+2025-06-06,Office Chair,6,179.00,West
+2025-06-07,USB-C Cable,3,15.00,East
+2025-06-08,Keyboard,1,53.10,
+2025-06-09,Mouse,2,27.55,East
+2025-06-09,Headset,1,107.10,South
+2025-06-09,USB-C Cable,2,14.25,South
+2025-06-09,Headset,8,119.00,North
+2025-06-10,Docking Station,2,189.00,East
+2025-06-11,Webcam,5,79.00,North
+2025-06-11,Office Chair,3,170.05,West
+2025-06-11,Standing Desk,5,386.10,East
+2025-06-11,Webcam,7,79.00,East
+2025-06-11,Webcam,2,79.00,East
+2025-06-11,Docking Station,3,189.00,North
+2025-06-12,Webcam,3,79.00,North
+2025-06-12,USB-C Cable,1,14.25,South
+2025-06-12,Monitor,1,224.10,West
+2025-06-13,Keyboard,8,53.10,North
+2025-06-13,Office Chair,8,179.00,West
+2025-06-13,Standing Desk,2,386.10,North
+2025-06-14,Keyboard,1,53.10,East
+2025-06-15,Mouse,1,26.10,West
+2025-06-15,Keyboard,7,59.00,East
+2025-06-15,Headset,6,119.00,North
+2025-06-15,Mouse,1,29.00,East
+2025-06-16,Webcam,7,71.10,West
+2025-06-16,Laptop,5,854.05,North
+2025-06-18,Webcam,7,75.05,North
+2025-06-18,,3,429.00,West
+2025-06-18,Standing Desk,6,429.00,North
+2025-06-19,Keyboard,6,53.10,East
+2025-06-19,Mouse,3,29.00,South
+2025-06-20,USB-C Cable,8,15.00,West
+2025-06-20,Laptop,2,809.10,North
+2025-06-20,USB-C Cable,2,13.50,West
+2025-06-21,Keyboard,2,56.05,East
+2025-06-21,Mouse,3,29.00,North
+2025-06-22,USB-C Cable,3,15.00,East
+2025-06-22,Webcam,2,75.05,East
+2025-06-22,Monitor,2,249.00,East
+2025-06-23,Mouse,1,29.00,South
+2025-06-23,Monitor,8,236.55,West
+2025-06-23,Keyboard,8,56.05,East
+2025-06-23,Keyboard,8,53.10,South
+2025-06-23,Webcam,7,79.00,South
+2025-06-24,Monitor,5,236.55,North
+2025-06-25,Laptop,8,899.00,West
+2025-06-25,Keyboard,4,59.00,North
+2025-06-25,Headset,5,119.00,West
+2025-06-26,Monitor,5,249.00,East
+2025-06-26,Keyboard,2,59.00,West
+2025-06-26,Headset,4,107.10,North
+2025-06-26,USB-C Cable,,15.00,East
+2025-06-27,Monitor,7,249.00,West
+2025-06-27,Keyboard,1,53.10,West
+2025-06-28,Keyboard,6,59.00,South
+2025-06-28,Mouse,5,29.00,South
+2025-06-28,Keyboard,4,59.00,East
+2025-06-29,USB-C Cable,3,14.25,South
+2025-06-29,Mouse,3,29.00,West
+2025-06-29,Mouse,8,26.10,South
+2025-06-30,USB-C Cable,5,15.00,North
+2025-06-30,Laptop,2,899.00,North
+2025-06-30,Laptop,8,854.05,West
+2025-06-30,Webcam,8,75.05,West
+2025-06-30,Headset,1,119.00,North
+2025-06-30,Mouse,3,27.55,North
+2025-06-30,USB-C Cable,5,15.00,North
+2025-07-01,Docking Station,4,189.00,East
+2025-07-01,Headset,3,119.00,West
+2025-07-01,Docking Station,4,189.00,East
+2025-07-04,Mouse,7,26.10,North
+2025-07-05,Standing Desk,2,429.00,East
+2025-07-05,Monitor,,249.00,North
+2025-07-06,Standing Desk,7,429.00,North
+2025-07-06,USB-C Cable,8,15.00,West
+2025-07-07,Keyboard,5,56.05,East
+2025-07-07,USB-C Cable,6,15.00,North
+2025-07-07,Webcam,4,79.00,East
+2025-07-08,Headset,7,107.10,West
+2025-07-08,USB-C Cable,7,15.00,West
+2025-07-08,Standing Desk,8,407.55,West
+2025-07-09,Headset,3,119.00,West
+2025-07-09,Office Chair,8,170.05,North
+2025-07-09,Mouse,3,29.00,South
+2025-07-10,Mouse,7,26.10,West
+2025-07-11,Mouse,6,29.00,West
+2025-07-11,Monitor,6,224.10,West
+2025-07-12,Webcam,1,71.10,West
+2025-07-12,Office Chair,8,179.00,West
+2025-07-14,Mouse,,26.10,South
+2025-07-14,Monitor,7,224.10,West
+2025-07-14,Keyboard,5,59.00,West
+2025-07-15,Monitor,6,224.10,East
+2025-07-15,Docking Station,2,189.00,West
+2025-07-15,USB-C Cable,2,13.50,West
+2025-07-15,Headset,2,113.05,North
+2025-07-15,Docking Station,8,170.10,East
+2025-07-15,Standing Desk,6,429.00,North
+2025-07-15,Mouse,3,29.00,North
+2025-07-17,Office Chair,8,179.00,North
+2025-07-17,USB-C Cable,4,15.00,West
+2025-07-17,Headset,2,119.00,West
+2025-07-18,USB-C Cable,7,15.00,West
+2025-07-18,USB-C Cable,,14.25,North
+2025-07-19,USB-C Cable,2,15.00,North
+2025-07-19,Webcam,5,71.10,North
+2025-07-19,USB-C Cable,5,15.00,West
+2025-07-19,Headset,1,119.00,East
+2025-07-19,Headset,3,119.00,West
+2025-07-20,Mouse,3,29.00,North
+2025-07-20,Keyboard,2,53.10,West
+2025-07-20,Mouse,1,29.00,West
+2025-07-20,Headset,1,119.00,East
+2025-07-21,Office Chair,7,179.00,North
+2025-07-21,Keyboard,8,59.00,North
+2025-07-21,USB-C Cable,6,15.00,North
+2025-07-21,Mouse,5,29.00,North
+2025-07-22,USB-C Cable,8,15.00,South
+2025-07-22,Webcam,4,71.10,West
+2025-07-23,Office Chair,3,170.05,North
+2025-07-23,Keyboard,6,56.05,North
+2025-07-23,Docking Station,1,170.10,North
+2025-07-24,Mouse,7,27.55,East
+2025-07-25,Mouse,2,26.10,West
+2025-07-25,Mouse,2,29.00,East
+2025-07-25,Mouse,7,26.10,North
+2025-07-26,Webcam,3,75.05,East
+2025-07-27,Monitor,1,249.00,North
+2025-07-27,Webcam,7,79.00,North
+2025-07-27,Headset,4,119.00,East
+2025-07-27,Webcam,3,79.00,North
+2025-07-27,Standing Desk,6,407.55,South
+2025-07-27,Monitor,1,249.00,North
+2025-07-28,Monitor,7,236.55,North
+2025-07-29,Headset,4,119.00,North
+2025-07-29,Monitor,1,249.00,South
+2025-07-29,Laptop,5,899.00,West
+2025-07-29,Laptop,5,809.10,North
+2025-07-30,Mouse,1,26.10,East
+2025-07-30,USB-C Cable,1,14.25,North
+2025-07-30,USB-C Cable,5,15.00,North
+2025-07-31,Mouse,6,27.55,West
+2025-07-31,USB-C Cable,5,14.25,South
+2025-07-31,Webcam,3,79.00,West
+2025-07-31,Keyboard,6,53.10,West
+2025-07-31,USB-C Cable,2,14.25,East
+2025-08-01,USB-C Cable,1,14.25,West
+2025-08-02,Webcam,4,79.00,North
+2025-08-02,Webcam,4,79.00,South
+2025-08-03,Monitor,6,249.00,North
+2025-08-03,Keyboard,8,53.10,North
+2025-08-04,Webcam,1,75.05,East
+2025-08-04,Laptop,5,899.00,North
+2025-08-04,USB-C Cable,6,13.50,East
+2025-08-04,Headset,8,113.05,North
+2025-08-05,USB-C Cable,6,14.25,South
+2025-08-06,USB-C Cable,3,13.50,North
+2025-08-07,Docking Station,2,189.00,East
+2025-08-07,Mouse,1,26.10,West
+2025-08-07,Mouse,3,27.55,South
+2025-08-08,Monitor,8,224.10,East
+2025-08-08,Monitor,8,236.55,West
+2025-08-08,Headset,6,119.00,East
+2025-08-08,Laptop,3,899.00,West
+2025-08-08,Laptop,7,899.00,North
+2025-08-09,Standing Desk,8,407.55,East
+2025-08-10,Mouse,2,26.10,North
+2025-08-10,USB-C Cable,1,13.50,North
+2025-08-10,Laptop,8,899.00,East
+2025-08-10,Mouse,2,27.55,East
+2025-08-11,USB-C Cable,8,15.00,West
+2025-08-11,Monitor,3,249.00,East
+2025-08-12,Docking Station,3,189.00,East
+2025-08-12,Standing Desk,2,429.00,North
+2025-08-12,Office Chair,8,179.00,West
+2025-08-12,Keyboard,4,59.00,East
+2025-08-12,USB-C Cable,5,15.00,North
+2025-08-12,USB-C Cable,3,13.50,North
+2025-08-13,Mouse,2,27.55,East
+2025-08-13,Monitor,7,249.00,East
+2025-08-14,Monitor,4,249.00,East
+2025-08-14,Headset,8,107.10,South
+2025-08-14,Headset,8,113.05,West
+2025-08-14,Monitor,2,249.00,North
+2025-08-15,Standing Desk,4,386.10,East
+2025-08-15,Headset,8,107.10,South
+2025-08-15,Standing Desk,5,386.10,North
+2025-08-15,Mouse,6,29.00,North
+2025-08-15,Headset,3,107.10,South
+2025-08-16,Mouse,2,27.55,North
+2025-08-16,Keyboard,4,59.00,South
+2025-08-17,Mouse,2,29.00,North
+2025-08-17,Headset,2,107.10,North
+2025-08-18,Mouse,7,26.10,West
+2025-08-18,Office Chair,5,170.05,South
+2025-08-18,Office Chair,8,161.10,North
+2025-08-18,Mouse,4,26.10,South
+2025-08-18,USB-C Cable,7,15.00,South
+2025-08-18,Standing Desk,2,429.00,North
+2025-08-18,Office Chair,4,179.00,North
+2025-08-18,Mouse,4,26.10,North
+2025-08-19,Office Chair,2,179.00,West
+2025-08-19,Docking Station,8,189.00,East
+2025-08-19,Office Chair,6,161.10,South
+2025-08-19,Headset,7,119.00,East
+2025-08-20,Webcam,6,79.00,North
+2025-08-20,Standing Desk,8,,East
+2025-08-20,Mouse,7,26.10,East
+2025-08-21,Headset,5,119.00,West
+2025-08-21,Keyboard,5,59.00,North
+2025-08-21,Webcam,7,75.05,South
+2025-08-21,Office Chair,7,179.00,North
+2025-08-23,Office Chair,5,170.05,East
+2025-08-23,Keyboard,3,59.00,East
+2025-08-23,USB-C Cable,6,15.00,North
+2025-08-23,Office Chair,2,170.05,South
+2025-08-24,Webcam,3,71.10,South
+2025-08-24,Office Chair,7,179.00,West
+2025-08-25,Monitor,4,249.00,East
+2025-08-26,Keyboard,4,59.00,East
+2025-08-26,Office Chair,8,179.00,West
+2025-08-26,USB-C Cable,7,15.00,East
+2025-08-26,USB-C Cable,7,15.00,West
+2025-08-26,USB-C Cable,4,14.25,East
+2025-08-27,Docking Station,2,170.10,East
+2025-08-27,Monitor,8,236.55,North
+2025-08-28,Headset,3,119.00,East
+2025-08-29,Webcam,4,79.00,North
+2025-08-29,Webcam,4,79.00,East
+2025-08-29,USB-C Cable,8,15.00,East
+2025-08-30,USB-C Cable,6,15.00,North
+2025-08-31,Keyboard,7,53.10,
+2025-08-31,Docking Station,8,189.00,West
+2025-08-31,Standing Desk,5,386.10,North
+2025-08-31,Laptop,7,854.05,North
+2025-08-31,Keyboard,1,59.00,East
+2025-09-01,Office Chair,6,179.00,North
+2025-09-01,Mouse,8,29.00,South
+2025-09-01,Mouse,5,26.10,South
+2025-09-02,Webcam,4,79.00,West
+2025-09-02,USB-C Cable,5,14.25,West
+2025-09-02,Office Chair,2,179.00,North
+2025-09-03,Keyboard,2,56.05,East
+2025-09-03,Docking Station,6,170.10,West
+2025-09-04,Webcam,5,79.00,East
+2025-09-04,Laptop,5,899.00,South
+2025-09-05,USB-C Cable,6,15.00,South
+2025-09-05,Monitor,4,224.10,North
+2025-09-05,USB-C Cable,6,13.50,North
+2025-09-05,Monitor,5,249.00,West
+2025-09-05,USB-C Cable,5,15.00,South
+2025-09-06,Headset,4,119.00,West
+2025-09-06,USB-C Cable,1,15.00,East
+2025-09-06,USB-C Cable,5,15.00,West
+2025-09-06,USB-C Cable,3,15.00,North
+2025-09-07,Mouse,6,27.55,North
+2025-09-07,Office Chair,5,179.00,West
+2025-09-07,Standing Desk,5,429.00,East
+2025-09-07,Keyboard,1,59.00,North
+2025-09-08,Headset,1,119.00,West
+2025-09-08,Mouse,1,29.00,West
+2025-09-08,Headset,7,119.00,North
+2025-09-09,Keyboard,6,59.00,North
+2025-09-10,Laptop,8,899.00,North
+2025-09-10,Mouse,3,27.55,West
+2025-09-11,Headset,5,113.05,West
+2025-09-11,Mouse,3,29.00,East
+2025-09-11,Webcam,4,75.05,West
+2025-09-11,USB-C Cable,5,14.25,East
+2025-09-11,Mouse,2,26.10,West
+2025-09-12,Docking Station,6,189.00,West
+2025-09-12,Laptop,7,899.00,North
+2025-09-13,Monitor,4,249.00,East
+2025-09-13,Standing Desk,2,407.55,North
+2025-09-14,Keyboard,8,59.00,North
+2025-09-14,Mouse,5,27.55,North
+2025-09-14,Keyboard,5,59.00,East
+2025-09-14,Keyboard,4,59.00,East
+2025-09-15,Monitor,6,224.10,West
+2025-09-15,Monitor,3,249.00,South
+2025-09-15,Docking Station,4,189.00,North
+2025-09-15,Mouse,6,26.10,North
+2025-09-16,Headset,5,119.00,East
+2025-09-16,USB-C Cable,7,15.00,West
+2025-09-16,Webcam,7,75.05,North
+2025-09-17,Mouse,2,27.55,West
+2025-09-18,Keyboard,8,56.05,West
+2025-09-19,Monitor,5,249.00,North
+2025-09-19,Monitor,8,249.00,North
+2025-09-19,Standing Desk,2,429.00,North
+2025-09-20,Mouse,1,29.00,West
+2025-09-20,Monitor,4,224.10,South
+2025-09-20,USB-C Cable,5,15.00,East
+2025-09-20,Office Chair,3,179.00,West
+2025-09-21,Mouse,7,27.55,South
+2025-09-21,Monitor,3,236.55,North
+2025-09-22,Mouse,2,27.55,North
+2025-09-22,Webcam,4,71.10,North
+2025-09-22,USB-C Cable,2,15.00,East
+2025-09-22,Webcam,3,79.00,South
+2025-09-23,Mouse,5,,North
+2025-09-23,USB-C Cable,8,14.25,South
+2025-09-23,Webcam,8,79.00,North
+2025-09-23,USB-C Cable,4,15.00,East
+2025-09-23,Standing Desk,2,429.00,North
+2025-09-24,Headset,7,113.05,East
+2025-09-24,Keyboard,3,59.00,North
+2025-09-24,Monitor,5,224.10,West
+2025-09-24,Standing Desk,4,386.10,East
+2025-09-26,Mouse,6,26.10,East
+2025-09-27,Headset,6,119.00,West
+2025-09-27,Mouse,5,29.00,South
+2025-09-27,Headset,6,119.00,East
+2025-09-28,Mouse,4,29.00,East
+2025-09-28,Mouse,5,29.00,West
+2025-09-28,Mouse,8,26.10,North
+2025-09-28,USB-C Cable,5,13.50,North
+2025-09-28,USB-C Cable,7,14.25,North
+2025-09-28,Docking Station,6,189.00,West
+2025-09-28,Docking Station,3,189.00,North
+2025-09-29,Monitor,7,249.00,South
+2025-09-30,Monitor,5,224.10,North
+2025-09-30,Mouse,6,29.00,East
+2025-09-30,Office Chair,1,170.05,West
+2025-09-30,Docking Station,5,189.00,West
+2025-09-30,USB-C Cable,3,15.00,West
+2025-10-02,Standing Desk,3,429.00,East
+2025-10-02,USB-C Cable,6,15.00,West
+2025-10-03,Standing Desk,1,429.00,North
+2025-10-03,Webcam,7,71.10,West
+2025-10-03,Monitor,8,236.55,North
+2025-10-03,Headset,7,119.00,West
+2025-10-03,Keyboard,2,53.10,West
+2025-10-03,Keyboard,7,56.05,South
+2025-10-04,Mouse,6,27.55,East
+2025-10-04,Headset,7,119.00,North
+2025-10-05,Monitor,1,249.00,East
+2025-10-06,Headset,5,119.00,East
+2025-10-06,Webcam,3,71.10,North
+2025-10-07,Standing Desk,1,386.10,East
+2025-10-07,Docking Station,3,189.00,East
+2025-10-07,Docking Station,3,189.00,North
+2025-10-08,USB-C Cable,1,14.25,South
+2025-10-08,Mouse,8,29.00,North
+2025-10-08,Docking Station,3,170.10,South
+2025-10-08,Keyboard,7,53.10,North
+2025-10-09,Headset,6,113.05,East
+2025-10-10,Keyboard,5,53.10,North
+2025-10-10,Mouse,1,27.55,North
+2025-10-10,Mouse,4,29.00,East
+2025-10-10,Monitor,3,249.00,West
+2025-10-11,Monitor,5,236.55,East
+2025-10-11,Docking Station,4,189.00,East
+2025-10-11,Mouse,7,27.55,North
+2025-10-11,USB-C Cable,7,14.25,North
+2025-10-12,Keyboard,8,56.05,East
+2025-10-12,Keyboard,6,59.00,East
+2025-10-12,Webcam,8,79.00,North
+2025-10-13,Standing Desk,2,429.00,West
+2025-10-14,Keyboard,3,59.00,West
+2025-10-14,Webcam,1,79.00,North
+2025-10-14,Headset,5,107.10,North
+2025-10-14,,6,189.00,West
+2025-10-15,Docking Station,1,179.55,North
+2025-10-15,Mouse,1,29.00,North
+2025-10-16,USB-C Cable,1,15.00,South
+2025-10-17,Keyboard,2,56.05,West
+2025-10-18,Monitor,5,249.00,East
+2025-10-18,Webcam,7,75.05,North
+2025-10-19,Standing Desk,1,407.55,East
+2025-10-20,Webcam,8,75.05,North
+2025-10-20,Keyboard,4,59.00,North
+2025-10-20,Standing Desk,8,429.00,West
+2025-10-20,Keyboard,6,59.00,East
+2025-10-21,Mouse,8,29.00,North
+2025-10-21,Office Chair,5,179.00,North
+2025-10-21,Monitor,5,249.00,East
+2025-10-21,Headset,1,107.10,West
+2025-10-22,Headset,6,119.00,West
+2025-10-22,Mouse,7,26.10,South
+2025-10-22,Keyboard,7,59.00,East
+2025-10-22,Headset,6,119.00,West
+2025-10-23,Standing Desk,2,386.10,North
+2025-10-23,Docking Station,4,170.10,South
+2025-10-23,Headset,3,113.05,East
+2025-10-23,Mouse,3,29.00,East
+2025-10-23,Mouse,3,29.00,East
+2025-10-24,USB-C Cable,4,14.25,North
+2025-10-24,Office Chair,2,179.00,East
+2025-10-24,Keyboard,7,59.00,East
+2025-10-24,Monitor,1,224.10,West
+2025-10-24,Laptop,6,809.10,West
+2025-10-25,Mouse,8,27.55,East
+2025-10-25,Laptop,4,809.10,East
+2025-10-25,Keyboard,2,59.00,South
+2025-10-25,USB-C Cable,1,15.00,South
+2025-10-25,Docking Station,8,189.00,North
+2025-10-26,Mouse,4,27.55,East
+2025-10-26,Keyboard,8,53.10,West
+2025-10-26,Webcam,5,79.00,North
+2025-10-26,Office Chair,7,179.00,South
+2025-10-26,USB-C Cable,3,15.00,West
+2025-10-27,Mouse,2,29.00,North
+2025-10-29,Mouse,6,27.55,East
+2025-10-29,Monitor,2,249.00,West
+2025-10-29,Laptop,1,899.00,South
+2025-10-30,USB-C Cable,8,,North
+2025-10-31,Keyboard,1,53.10,South
+2025-10-31,Keyboard,6,59.00,North
+2025-10-31,Mouse,3,27.55,South
+2025-10-31,Headset,8,107.10,North
+2025-10-31,Office Chair,4,170.05,North
+2025-10-31,Headset,3,119.00,South
+2025-11-01,USB-C Cable,6,15.00,West
+2025-11-01,Webcam,1,75.05,West
+2025-11-02,Laptop,4,899.00,West
+2025-11-02,Keyboard,6,59.00,East
+2025-11-02,Headset,8,113.05,South
+2025-11-03,Office Chair,5,179.00,North
+2025-11-03,Webcam,3,79.00,South
+2025-11-03,Headset,5,113.05,East
+2025-11-03,Monitor,4,236.55,North
+2025-11-04,Monitor,7,249.00,North
+2025-11-04,Keyboard,3,53.10,West
+2025-11-05,Laptop,8,809.10,North
+2025-11-05,USB-C Cable,8,15.00,South
+2025-11-06,Headset,2,107.10,South
+2025-11-07,Headset,3,119.00,West
+2025-11-07,USB-C Cable,7,14.25,East
+2025-11-07,Mouse,1,27.55,North
+2025-11-08,Webcam,5,79.00,North
+2025-11-08,Mouse,3,29.00,North
+2025-11-09,Standing Desk,7,429.00,North
+2025-11-09,Standing Desk,6,429.00,West
+2025-11-09,USB-C Cable,6,15.00,East
+2025-11-09,USB-C Cable,5,14.25,North
+2025-11-09,Laptop,4,809.10,East
+2025-11-09,Webcam,6,79.00,East
+2025-11-10,USB-C Cable,2,14.25,East
+2025-11-10,Keyboard,4,56.05,North
+2025-11-10,Monitor,4,249.00,South
+2025-11-11,USB-C Cable,6,15.00,North
+2025-11-12,Keyboard,1,59.00,South
+2025-11-12,Webcam,3,75.05,North
+2025-11-12,Monitor,3,236.55,West
+2025-11-13,Mouse,7,29.00,South
+2025-11-13,Mouse,3,29.00,South
+2025-11-13,Webcam,2,75.05,West
+2025-11-13,Laptop,4,809.10,South
+2025-11-13,Webcam,6,71.10,West
+2025-11-14,Keyboard,2,59.00,West
+2025-11-15,USB-C Cable,2,15.00,North
+2025-11-15,Monitor,7,224.10,South
+2025-11-15,Laptop,5,809.10,West
+2025-11-15,Monitor,6,224.10,West
+2025-11-15,Keyboard,6,59.00,North
+2025-11-16,Mouse,5,27.55,South
+2025-11-16,Mouse,4,29.00,East
+2025-11-16,Headset,6,119.00,South
+2025-11-17,Headset,7,107.10,North
+2025-11-17,Monitor,6,249.00,East
+2025-11-17,USB-C Cable,7,15.00,North
+2025-11-17,Headset,7,113.05,East
+2025-11-18,Mouse,2,27.55,East
+2025-11-18,Laptop,4,809.10,East
+2025-11-18,Laptop,3,899.00,South
+2025-11-18,Headset,8,119.00,East
+2025-11-18,Headset,7,107.10,East
+2025-11-19,Webcam,3,75.05,West
+2025-11-19,Mouse,4,29.00,West
+2025-11-19,Keyboard,7,59.00,North
+2025-11-20,USB-C Cable,3,13.50,North
+2025-11-20,Mouse,4,29.00,North
+2025-11-20,Laptop,2,854.05,North
+2025-11-20,USB-C Cable,3,15.00,North
+2025-11-21,Mouse,5,27.55,South
+2025-11-21,Standing Desk,3,407.55,East
+2025-11-22,Headset,2,119.00,North
+2025-11-22,Standing Desk,8,386.10,North
+2025-11-23,Mouse,1,29.00,West
+2025-11-23,Office Chair,7,179.00,South
+2025-11-23,USB-C Cable,6,14.25,East
+2025-11-24,Laptop,7,899.00,South
+2025-11-24,Webcam,5,79.00,North
+2025-11-24,USB-C Cable,7,15.00,East
+2025-11-25,USB-C Cable,1,14.25,South
+2025-11-25,Webcam,4,75.05,East
+2025-11-25,Webcam,3,79.00,South
+2025-11-25,Headset,5,107.10,West
+2025-11-26,Webcam,3,71.10,North
+2025-11-26,Mouse,6,29.00,North
+2025-11-26,Mouse,6,29.00,East
+2025-11-26,Monitor,1,236.55,North
+2025-11-26,Mouse,5,29.00,East
+2025-11-27,Monitor,7,249.00,North
+2025-11-27,Webcam,2,71.10,North
+2025-11-29,Keyboard,7,56.05,North
+2025-11-29,Mouse,6,27.55,East
+2025-11-29,Mouse,1,27.55,North
+2025-11-30,Standing Desk,1,,North
+2025-11-30,Mouse,6,29.00,West
+2025-11-30,Headset,4,119.00,West
+2025-12-01,Keyboard,6,53.10,East
+2025-12-01,Docking Station,3,189.00,East
+2025-12-01,Standing Desk,5,429.00,North
+2025-12-01,Docking Station,2,189.00,South
+2025-12-01,USB-C Cable,3,15.00,East
+2025-12-01,Headset,4,119.00,West
+2025-12-02,Headset,2,119.00,West
+2025-12-02,Mouse,7,26.10,East
+2025-12-02,Laptop,4,809.10,West
+2025-12-03,Keyboard,6,59.00,South
+2025-12-03,Monitor,3,249.00,North
+2025-12-03,Keyboard,3,59.00,North
+2025-12-03,Monitor,3,249.00,North
+2025-12-03,Keyboard,7,59.00,South
+2025-12-03,Docking Station,5,170.10,East
+2025-12-04,Mouse,1,29.00,South
+2025-12-04,Mouse,5,26.10,East
+2025-12-04,Webcam,3,79.00,East
+2025-12-04,Headset,,119.00,East
+2025-12-04,Office Chair,8,161.10,
+2025-12-04,USB-C Cable,3,13.50,West
+2025-12-04,USB-C Cable,6,15.00,North
+2025-12-05,Mouse,5,29.00,East
+2025-12-05,Docking Station,2,189.00,North
+2025-12-05,Mouse,1,29.00,North
+2025-12-05,Keyboard,8,59.00,South
+2025-12-06,Office Chair,,179.00,South
+2025-12-06,Mouse,7,27.55,North
+2025-12-06,USB-C Cable,5,14.25,West
+2025-12-06,USB-C Cable,3,15.00,West
+2025-12-06,Webcam,3,79.00,North
+2025-12-06,USB-C Cable,3,15.00,West
+2025-12-07,Keyboard,7,59.00,East
+2025-12-07,USB-C Cable,7,15.00,North
+2025-12-08,USB-C Cable,8,15.00,North
+2025-12-08,Monitor,3,249.00,East
+2025-12-08,Monitor,5,249.00,East
+2025-12-08,Webcam,5,79.00,North
+2025-12-09,USB-C Cable,2,14.25,West
+2025-12-10,Webcam,6,79.00,West
+2025-12-10,Webcam,4,75.05,North
+2025-12-10,Laptop,7,899.00,West
+2025-12-10,USB-C Cable,7,13.50,East
+2025-12-10,Mouse,7,29.00,West
+2025-12-10,Monitor,2,236.55,North
+2025-12-11,Headset,8,119.00,East
+2025-12-11,Monitor,8,249.00,West
+2025-12-11,Keyboard,4,59.00,West
+2025-12-11,Mouse,6,29.00,East
+2025-12-11,Mouse,2,29.00,West
+2025-12-12,Headset,4,113.05,North
+2025-12-12,USB-C Cable,7,15.00,South
+2025-12-12,Monitor,6,249.00,West
+2025-12-12,Standing Desk,7,429.00,West
+2025-12-12,USB-C Cable,5,15.00,East
+2025-12-12,Keyboard,8,59.00,East
+2025-12-12,Webcam,8,71.10,East
+2025-12-13,Keyboard,4,56.05,North
+2025-12-13,Mouse,4,26.10,
+2025-12-13,Headset,5,119.00,North
+2025-12-14,Mouse,3,26.10,North
+2025-12-15,Headset,2,119.00,East
+2025-12-15,Office Chair,6,179.00,East
+2025-12-15,Office Chair,5,179.00,West
+2025-12-15,Keyboard,5,53.10,North
+2025-12-15,Standing Desk,2,429.00,West
+2025-12-16,Mouse,4,29.00,South
+2025-12-16,Headset,8,107.10,North
+2025-12-16,USB-C Cable,5,13.50,North
+2025-12-16,USB-C Cable,7,14.25,North
+2025-12-17,Headset,5,119.00,East
+2025-12-17,Headset,3,119.00,East
+2025-12-17,USB-C Cable,4,15.00,West
+2025-12-17,USB-C Cable,2,13.50,North
+2025-12-18,Docking Station,6,189.00,West
+2025-12-20,USB-C Cable,3,15.00,West
+2025-12-20,Mouse,4,29.00,West
+2025-12-21,USB-C Cable,4,15.00,North
+2025-12-21,Mouse,8,29.00,West
+2025-12-21,Keyboard,8,59.00,West
+2025-12-22,Docking Station,4,189.00,North
+2025-12-22,Headset,6,119.00,West
+2025-12-23,Headset,5,119.00,North
+2025-12-23,Headset,4,119.00,North
+2025-12-23,Mouse,5,26.10,East
+2025-12-23,USB-C Cable,2,13.50,North
+2025-12-24,Keyboard,4,59.00,West
+2025-12-25,Laptop,1,899.00,South
+2025-12-25,USB-C Cable,7,13.50,North
+2025-12-25,Standing Desk,8,429.00,West
+2025-12-25,Laptop,8,854.05,West
+2025-12-26,Keyboard,6,59.00,East
+2025-12-26,USB-C Cable,3,15.00,East
+2025-12-26,USB-C Cable,8,14.25,East
+2025-12-26,USB-C Cable,2,15.00,North
+2025-12-27,Webcam,8,79.00,South
+2025-12-27,Headset,5,119.00,East
+2025-12-27,Webcam,7,79.00,East
+2025-12-28,Docking Station,5,189.00,West
+2025-12-28,Keyboard,3,59.00,East
+2025-12-28,Laptop,2,809.10,East
+2025-12-28,Docking Station,6,170.10,North
+2025-12-28,Mouse,5,29.00,East
+2025-12-29,Webcam,7,71.10,East
+2025-12-29,Headset,1,119.00,East
+2025-12-31,Office Chair,4,161.10,South
+2025-12-31,USB-C Cable,4,14.25,West
+2025-12-31,Keyboard,3,53.10,South
