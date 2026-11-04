@@ -6,6 +6,8 @@ Upload a CSV and ask questions in plain English. DataPilot's AI writes the analy
 
 **Live demo:** http://66.42.63.156 (running an analysis needs the demo access code included with the hackathon submission)
 
+![DataPilot showing verified results, charts, and insights](docs/screenshots/results.png)
+
 ## The problem
 
 AI assistants can state a wrong number with complete confidence, and running AI-written code on your own systems is risky. Analysts need answers they can check, from code that can't do damage.
@@ -26,6 +28,8 @@ In testing, the AI's first attempt reported 48 missing cells when the real count
 3. Click **Use the sample question**, then **Analyze**.
 4. See the plan, code, logs, verified figures, interactive charts, insights, and downloads.
 5. Open **Containment Lab** to watch the sandbox stop real attacks.
+
+![The Containment Lab showing contained attacks](docs/screenshots/containment-lab.png)
 
 ## How it works
 
