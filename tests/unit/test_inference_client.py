@@ -3,8 +3,10 @@
 The fake replies follow the OpenAI-compatible format that providers document.
 """
 
+import gzip
 import json
 import logging
+import time
 from typing import Literal
 
 import httpx
@@ -234,6 +236,29 @@ def test_structured_answer_with_the_wrong_shape_is_rejected(content):
     assert content not in str(caught.value)
 
 
+def test_prompt_mode_describes_the_format_instead_of_sending_response_format():
+    fake = FakeVultr(ok(VALID_PLAN))
+
+    plan = fake.client(structured_mode="prompt").chat_structured(HELLO, Plan)
+
+    assert plan == Plan(status="ok", steps=["add up revenue"])
+    assert "response_format" not in fake.body()
+    last = fake.body()["messages"][-1]
+    assert last["role"] == "system"
+    assert '"steps"' in last["content"]
+
+
+def test_prompt_mode_still_rejects_the_wrong_shape():
+    with pytest.raises(InferenceResponseError, match="didn't match Plan"):
+        FakeVultr(ok('{"status": "ok", "total_revenue": 999}')).client(structured_mode="prompt").chat_structured(HELLO, Plan)
+
+
+def test_json_is_found_inside_a_sentence():
+    plan = FakeVultr(ok(f"Here is the plan: {VALID_PLAN} Hope that helps!")).client().chat_structured(HELLO, Plan)
+
+    assert plan.status == "ok"
+
+
 # --- Errors that must not be retried ---
 
 
@@ -336,6 +361,43 @@ def test_timeout_waiting_for_an_answer_is_not_retried():
         fake.client().chat(HELLO)
 
     assert len(fake.requests) == 1
+
+
+def test_endless_keep_alive_bytes_cannot_hang_a_request():
+    """A real bug: a provider sent 200 OK, then only keep-alive bytes for over 10 minutes."""
+
+    class EndlessStream(httpx.SyncByteStream):
+        def __iter__(self):
+            while True:
+                time.sleep(0.01)
+                yield b" "
+
+    fake = FakeVultr(httpx.Response(200, stream=EndlessStream()))
+    started = time.monotonic()
+
+    with pytest.raises(InferenceTimeoutError, match="No complete answer"):
+        fake.client(timeout_seconds=0.2).chat(HELLO)
+
+    assert time.monotonic() - started < 5
+    assert len(fake.requests) == 1
+
+
+def test_compressed_replies_are_read_correctly():
+    """A real bug: real providers compress replies, which the plain fake replies didn't show."""
+    compressed = gzip.compress(json.dumps(completion("Hello")).encode())
+    reply = httpx.Response(200, headers={"Content-Encoding": "gzip"}, content=compressed)
+
+    assert FakeVultr(reply).client().chat(HELLO).content == "Hello"
+
+
+def test_endless_reply_data_is_cut_off():
+    class HugeStream(httpx.SyncByteStream):
+        def __iter__(self):
+            while True:
+                yield b"x" * 1024 * 1024
+
+    with pytest.raises(InferenceResponseError, match="too large"):
+        FakeVultr(httpx.Response(200, stream=HugeStream())).client().chat(HELLO)
 
 
 # --- Keeping secrets and user data private ---

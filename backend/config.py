@@ -23,13 +23,24 @@ class Settings(BaseSettings):
     # SecretStr hides the key if settings are ever printed or logged.
     ai_api_key: SecretStr | None = None
     ai_base_url: str = "https://openrouter.ai/api/v1"
-    # Picks an available free model that supports what each request needs.
-    ai_model: str = "openrouter/free"
-    # Generous, because free models can queue requests when they're busy.
-    ai_timeout_seconds: float = Field(default=180, gt=0)
+    # Tested with the real prompts on Nov 5, 2026. `openrouter/free` also works, but varies.
+    ai_model: str = "nvidia/nemotron-3.5-super-vl:free"
+    # "prompt" describes the JSON format in words, which free models need, because they
+    # hung when sent response_format in testing. Use "schema" for Vultr Serverless Inference.
+    ai_structured_mode: Literal["schema", "prompt"] = "prompt"
+    ai_timeout_seconds: float = Field(default=90, gt=0)
     ai_max_attempts: int = Field(default=3, ge=1, le=5)
     # Includes the model's thinking, so this also caps the cost of one call.
     ai_max_completion_tokens: int = Field(default=8192, ge=1)
+
+    # Free accounts get 50 requests a day, so stop before that and keep some in reserve.
+    ai_daily_request_limit: int = Field(default=40, ge=0)
+
+    # The private service that runs generated code in sandboxes.
+    executor_url: str = "http://127.0.0.1:8100"
+    executor_token: SecretStr | None = None
+    # When set, AI and sandbox features need this code, so strangers can't use them up.
+    access_code: SecretStr | None = None
 
     @field_validator("ai_base_url")
     @classmethod

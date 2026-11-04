@@ -18,7 +18,7 @@ import logging
 import re
 import time
 from collections.abc import Callable
-from typing import TypeVar
+from typing import Literal, TypeVar
 
 import httpx
 from pydantic import BaseModel, SecretStr, ValidationError
@@ -37,6 +37,7 @@ logger = logging.getLogger(__name__)
 SchemaT = TypeVar("SchemaT", bound=BaseModel)
 
 MAX_ERROR_TEXT_LENGTH = 300
+MAX_RESPONSE_BYTES = 4 * 1024 * 1024
 # Reasons an answer can't be used. "length" means it was cut off partway.
 UNUSABLE_FINISH_REASONS = {"length", "content_filter", "error"}
 
@@ -79,10 +80,14 @@ class InferenceResponseError(InferenceError):
     user_message = "The AI service returned an answer we couldn't use. Please try again."
 
 
-def _strip_code_fence(text: str) -> str:
-    """Some models wrap JSON in a Markdown ```json block, even when asked not to."""
+def _extract_json(text: str) -> str:
+    """Some models wrap JSON in a Markdown block or a sentence, even when asked not to.
+    This only finds the JSON. Pydantic still checks every field afterward."""
     match = re.fullmatch(r"\s*```(?:json)?\s*\n(.*?)\n?\s*```\s*", text, flags=re.DOTALL)
-    return match.group(1) if match else text
+    if match:
+        return match.group(1)
+    start, end = text.find("{"), text.rfind("}")
+    return text[start : end + 1] if 0 <= start < end else text
 
 
 class InferenceClient:
@@ -96,14 +101,17 @@ class InferenceClient:
         max_attempts: int = 3,
         max_retry_wait_seconds: float = 30,
         max_completion_tokens: int = 8192,
+        structured_mode: Literal["schema", "prompt"] = "schema",
         transport: httpx.BaseTransport | None = None,
         sleep: Callable[[float], None] = time.sleep,
     ) -> None:
         self._api_key = api_key
         self.model = model
+        self._timeout_seconds = timeout_seconds
         self._max_attempts = max_attempts
         self._max_retry_wait_seconds = max_retry_wait_seconds
         self._max_completion_tokens = max_completion_tokens
+        self._structured_mode = structured_mode
         self._sleep = sleep
         # Redirects stay off, so the key can't be forwarded to another address.
         self._http = httpx.Client(
@@ -190,14 +198,27 @@ class InferenceClient:
         max_completion_tokens: int | None = None,
     ) -> SchemaT:
         """Ask for an answer matching a Pydantic model, and check that it really does."""
-        result = self.chat(
-            messages,
-            temperature=temperature,
-            max_completion_tokens=max_completion_tokens,
-            response_schema=schema,
-        )
+        if self._structured_mode == "prompt":
+            # Free OpenRouter models hang when sent response_format, so describe it in words.
+            format_note = ChatMessage(
+                role="system",
+                content=(
+                    "Reply with only one JSON object, and no other text, matching this JSON Schema:\n"
+                    + json.dumps(schema.model_json_schema())
+                ),
+            )
+            result = self.chat(
+                [*messages, format_note], temperature=temperature, max_completion_tokens=max_completion_tokens
+            )
+        else:
+            result = self.chat(
+                messages,
+                temperature=temperature,
+                max_completion_tokens=max_completion_tokens,
+                response_schema=schema,
+            )
         try:
-            return schema.model_validate_json(_strip_code_fence(result.content))
+            return schema.model_validate_json(_extract_json(result.content))
         except ValidationError as error:
             # Only the count: Pydantic's full message quotes the model's output.
             raise InferenceResponseError(
@@ -214,7 +235,7 @@ class InferenceClient:
         for attempt in range(1, self._max_attempts + 1):
             backoff = 2.0 ** (attempt - 1)  # 1, 2, 4... seconds.
             try:
-                response = self._http.request(method, path, json=body, headers=headers)
+                response = self._send(method, path, body, headers)
             except (httpx.ReadTimeout, httpx.WriteTimeout) as error:
                 # The full timeout has passed already, so waiting again could take many minutes.
                 raise InferenceTimeoutError("The request timed out.") from error
@@ -236,6 +257,26 @@ class InferenceClient:
             self._sleep(delay)
 
         raise InferenceError("No request attempts were made.")  # Only if max_attempts < 1.
+
+    def _send(self, method: str, path: str, body: dict | None, headers: dict[str, str]) -> httpx.Response:
+        """Send a request with a limit on its total time.
+
+        httpx's timeout only limits the gap between bytes. Providers can send keep-alive
+        bytes while a model is busy, and each one resets that timer, so without this
+        limit a request could hang forever.
+        """
+        deadline = time.monotonic() + self._timeout_seconds
+        with self._http.stream(method, path, json=body, headers=headers) as response:
+            content = bytearray()
+            for chunk in response.iter_bytes():
+                content.extend(chunk)
+                if time.monotonic() > deadline:
+                    raise InferenceTimeoutError(f"No complete answer after {self._timeout_seconds:.0f} seconds.")
+                if len(content) > MAX_RESPONSE_BYTES:
+                    raise InferenceResponseError("The reply was too large.")
+        # The content is already decompressed, so its compression label must not carry over.
+        headers_out = {k: v for k, v in response.headers.items() if k.lower() not in ("content-encoding", "content-length")}
+        return httpx.Response(response.status_code, headers=headers_out, content=bytes(content))
 
     @staticmethod
     def _retry_delay(response: httpx.Response, attempt: int, backoff: float) -> float | None:
@@ -294,4 +335,5 @@ def create_inference_client(settings: Settings) -> InferenceClient:
         timeout_seconds=settings.ai_timeout_seconds,
         max_attempts=settings.ai_max_attempts,
         max_completion_tokens=settings.ai_max_completion_tokens,
+        structured_mode=settings.ai_structured_mode,
     )

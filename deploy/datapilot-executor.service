@@ -1,0 +1,24 @@
+[Unit]
+Description=DataPilot Executor (the only service allowed to start sandboxes)
+After=network.target docker.service
+Requires=docker.service
+
+[Service]
+# Its own user, with Docker access but no access to the app's .env file.
+User=dp-executor
+Group=dp-executor
+WorkingDirectory=/home/deploy/datapilot
+EnvironmentFile=/etc/datapilot/executor.env
+Environment=PYTHONUNBUFFERED=1
+Environment=HOME=/var/lib/datapilot-executor
+Environment=PYTHONDONTWRITEBYTECODE=1
+ExecStart=/home/deploy/datapilot/.venv/bin/uvicorn executor.main:app --host 127.0.0.1 --port 8100
+Restart=always
+RestartSec=3
+NoNewPrivileges=yes
+PrivateTmp=yes
+ProtectSystem=strict
+ReadWritePaths=/var/lib/datapilot-executor
+
+[Install]
+WantedBy=multi-user.target
