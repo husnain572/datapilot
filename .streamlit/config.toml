@@ -1,3 +1,7 @@
 [browser]
 # Don't send usage statistics to Streamlit.
 gatherUsageStats = false
+
+[server]
+# Megabytes. Matches the backend's limit, which is the one actually enforced.
+maxUploadSize = 25
