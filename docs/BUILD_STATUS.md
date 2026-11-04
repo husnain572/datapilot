@@ -2,6 +2,8 @@
 
 **Last updated:** Nov 5, 2026
 
+The interface was redesigned after the results below, with a custom theme, cards, tabs, and a progress tracker. It was re-tested in real Chrome, with the demo question (65 seconds) and the Containment Lab (all 7 contained), with 0 page exceptions. Main test suite: 276 passed, 19 skipped (the skipped ones are the Docker attack tests, which run on the server).
+
 **The app is built, deployed, and tested at http://66.42.63.156.** The hackathon submission isn't done yet.
 
 **Deadline: Nov 7, 2026, 12:00 am PKT. Target: submit by Nov 6, 9:00 pm PKT.**
