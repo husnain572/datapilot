@@ -21,21 +21,22 @@ class Settings(BaseSettings):
     dataset_ttl_hours: int = 24
 
     # SecretStr hides the key if settings are ever printed or logged.
-    vultr_serverless_inference_api_key: SecretStr | None = None
-    vultr_inference_base_url: str = "https://api.vultrinference.com/v1"
-    vultr_inference_model: str = "glm-5.3"
-    # Generous, because Vultr may hold a request for up to 2 minutes when busy.
-    vultr_inference_timeout_seconds: float = Field(default=180, gt=0)
-    vultr_inference_max_attempts: int = Field(default=3, ge=1, le=5)
+    ai_api_key: SecretStr | None = None
+    ai_base_url: str = "https://openrouter.ai/api/v1"
+    # Picks an available free model that supports what each request needs.
+    ai_model: str = "openrouter/free"
+    # Generous, because free models can queue requests when they're busy.
+    ai_timeout_seconds: float = Field(default=180, gt=0)
+    ai_max_attempts: int = Field(default=3, ge=1, le=5)
     # Includes the model's thinking, so this also caps the cost of one call.
-    vultr_inference_max_completion_tokens: int = Field(default=8192, ge=1)
+    ai_max_completion_tokens: int = Field(default=8192, ge=1)
 
-    @field_validator("vultr_inference_base_url")
+    @field_validator("ai_base_url")
     @classmethod
     def base_url_must_be_https(cls, value: str) -> str:
         """The API key travels with each request, so it must always be encrypted."""
         if not value.startswith("https://"):
-            raise ValueError("VULTR_INFERENCE_BASE_URL must start with https://")
+            raise ValueError("AI_BASE_URL must start with https://")
         return value
 
 

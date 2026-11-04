@@ -8,7 +8,7 @@
 Browser ──HTTP──> Nginx ──> Streamlit (screens)
                                │ REST
                                ▼
-                    FastAPI backend ──HTTPS──> Vultr Serverless Inference
+                    FastAPI backend ──HTTPS──> Free AI model (OpenRouter)
                   (agent, validation, reports)
                                │ private network + token
                                ▼
@@ -24,7 +24,7 @@ Browser ──HTTP──> Nginx ──> Streamlit (screens)
 |---|---|---|
 | Streamlit | Dining room | Screens for uploading, asking, and viewing results |
 | FastAPI | Manager | Coordinates the work and checks results before they go out |
-| Vultr AI model | Recipe writer | Plans, writes code, and explains, but never supplies numbers |
+| AI model | Recipe writer | Plans, writes code, and explains, but never supplies numbers |
 | Executor | Keeper of the kitchen keys | Builds each sandbox the same safe way, every time |
 | Sandbox | Sealed, disposable kitchen | Runs the code, then gets thrown away |
 | Nginx | Front door | The only public entrance; it sends visitors to Streamlit |
@@ -46,6 +46,7 @@ Browser ──HTTP──> Nginx ──> Streamlit (screens)
 
 | Decision | Why |
 |---|---|
+| OpenRouter's free models, through a provider-neutral client | The owner can't pay anything. Vultr Serverless Inference works by changing settings. |
 | Plain Python workflow instead of LangGraph | The steps are fixed and retries are limited, so a simple loop is easier to read and debug |
 | Separate executor service | Docker access amounts to root on the server, so neither the backend nor the sandbox gets it |
 | Docker runs only on the Vultr VM | Current Docker Desktop doesn't support macOS 12, and generated code must never run on the owner's Mac |

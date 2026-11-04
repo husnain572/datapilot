@@ -1,6 +1,7 @@
-"""Makes real, very small calls to Vultr to confirm the AI connection works.
+"""Makes a few real, very small calls to confirm the AI connection works.
 
-Uses your .env file, and costs a tiny number of tokens. It never prints your key.
+Uses your .env file. With a free model it costs nothing, but counts toward the
+free daily limit. It never prints your key.
 
 Run with: uv run python scripts/check_inference.py
 """
@@ -31,7 +32,7 @@ def main() -> int:
 
             available = client.list_model_ids()
             if client.model not in available:
-                print(f"FAILED: '{client.model}' isn't in Vultr's catalog of {len(available)} models.")
+                print(f"FAILED: '{client.model}' isn't in the provider's catalog of {len(available)} models.")
                 return 1
             print(f"1. Catalog: OK ({len(available)} models, includes this one)")
 

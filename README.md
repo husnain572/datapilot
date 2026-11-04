@@ -18,8 +18,9 @@ AI assistants can state a wrong number with complete confidence. DataPilot's AI 
 
 | Service | Role | Status |
 |---|---|---|
-| Vultr Serverless Inference | All AI model calls | Client built; analysis features in progress |
 | Vultr Cloud Compute | Hosts the app and the Docker sandbox | App deployed; sandbox in progress |
+
+AI models run through [OpenRouter's](https://openrouter.ai) free tier, to keep the project free to run. The client works with any OpenAI-compatible API, including Vultr Serverless Inference, by changing settings.
 
 ## Run it locally
 
@@ -31,7 +32,7 @@ cp .env.example .env                           # create your private settings fi
 uv run uvicorn backend.main:app --reload       # terminal 1: backend
 uv run streamlit run frontend/app.py           # terminal 2: frontend
 uv run pytest                                  # run the tests
-uv run python scripts/check_inference.py       # test the real AI connection (needs your key in .env)
+uv run python scripts/check_inference.py       # test the real AI connection (needs AI_API_KEY in .env)
 ```
 
 - Frontend: http://localhost:8501

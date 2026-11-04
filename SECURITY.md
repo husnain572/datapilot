@@ -48,7 +48,8 @@ Docker doesn't guarantee complete security. These risks remain:
 2. **Executor compromise.** The executor has Docker access, which amounts to root on the server. It's kept small, private, and token-protected.
 3. **Prompt injection.** Text in a CSV could try to manipulate the AI. Bad code would still run in the sandbox and its numbers would still be checked, but a misleading explanation is possible.
 4. **Wrong analysis logic.** Validation can show that a calculation was performed correctly. It can't prove it was the right calculation for the question, so we show the code and the assumptions.
-5. **Public demo abuse.** Limits reduce abuse but won't stop a determined attacker. Don't upload sensitive data to the demo.
+5. **Free AI provider.** Prompts go to OpenRouter and its model hosts, and free models may keep them. We send column details, statistics, and small samples, never a whole dataset, but those samples can include real values. Don't upload sensitive data.
+6. **Public demo abuse.** Limits reduce abuse but won't stop a determined attacker. Don't upload sensitive data to the demo.
 
 Checks on generated code are only an early warning and can be bypassed. The sandbox is the real boundary.
 

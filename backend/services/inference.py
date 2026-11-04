@@ -1,8 +1,9 @@
-"""Client for Vultr Serverless Inference, the only way DataPilot calls an AI model.
+"""Client for AI models, and the only way DataPilot calls one.
 
-API reference: https://api.vultrinference.com/docs
+It works with any OpenAI-compatible API, chosen by the AI_BASE_URL setting. We use
+OpenRouter's free models, and Vultr Serverless Inference works with the same code.
 
-Retry rules follow Vultr's error guide:
+Retry rules:
 - 429 (too many requests): wait for the time in the Retry-After header.
 - 502, 503, 504 (temporary trouble): wait, doubling the wait each time.
 - 500 (server failure): retry once only.
@@ -55,7 +56,7 @@ class InferenceAuthError(InferenceError):
 
 
 class InferenceRequestError(InferenceError):
-    """Vultr says the request is wrong, for example an unknown model. Retrying won't help."""
+    """The provider says the request is wrong, for example an unknown model. Retrying won't help."""
 
     user_message = "The AI service couldn't accept this request."
 
@@ -204,7 +205,7 @@ class InferenceClient:
             ) from None
 
     def list_model_ids(self) -> list[str]:
-        """Ask Vultr's live catalog which models exist."""
+        """Ask the provider's live catalog which models exist."""
         return [model.id for model in self._parse(self._request("GET", "/models"), ApiModelList).data]
 
     def _request(self, method: str, path: str, body: dict | None = None) -> httpx.Response:
@@ -263,7 +264,7 @@ class InferenceClient:
         return InferenceRequestError(message)
 
     def _safe_error_text(self, response: httpx.Response) -> str:
-        """Get Vultr's error message, with any copy of our key removed and the length capped."""
+        """Get the provider's error message, with any copy of our key removed and the length capped."""
         try:
             text = str(response.json()["error"]["message"])
         except (ValueError, KeyError, TypeError):
@@ -281,16 +282,16 @@ class InferenceClient:
 
 def create_inference_client(settings: Settings) -> InferenceClient:
     """Build a client from settings, or explain what's missing."""
-    api_key = settings.vultr_serverless_inference_api_key
+    api_key = settings.ai_api_key
     if api_key is None or not api_key.get_secret_value().strip():
         raise InferenceNotConfiguredError(
-            "VULTR_SERVERLESS_INFERENCE_API_KEY is not set. Add it to the .env file."
+            "AI_API_KEY is not set. Add it to the .env file."
         )
     return InferenceClient(
         SecretStr(api_key.get_secret_value().strip()),
-        settings.vultr_inference_base_url,
-        settings.vultr_inference_model,
-        timeout_seconds=settings.vultr_inference_timeout_seconds,
-        max_attempts=settings.vultr_inference_max_attempts,
-        max_completion_tokens=settings.vultr_inference_max_completion_tokens,
+        settings.ai_base_url,
+        settings.ai_model,
+        timeout_seconds=settings.ai_timeout_seconds,
+        max_attempts=settings.ai_max_attempts,
+        max_completion_tokens=settings.ai_max_completion_tokens,
     )

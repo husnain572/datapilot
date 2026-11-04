@@ -44,7 +44,7 @@ def test_not_ready_when_data_dir_is_missing(make_client, tmp_path):
 
 
 def test_api_key_is_hidden_when_settings_are_printed():
-    settings = Settings(_env_file=None, vultr_serverless_inference_api_key="not-a-real-key")
+    settings = Settings(_env_file=None, ai_api_key="not-a-real-key")
 
     assert "not-a-real-key" not in repr(settings)
-    assert settings.vultr_serverless_inference_api_key.get_secret_value() == "not-a-real-key"
+    assert settings.ai_api_key.get_secret_value() == "not-a-real-key"

@@ -1,4 +1,4 @@
-"""The data sent to and received from the Vultr Serverless Inference API."""
+"""The data sent to and received from an OpenAI-compatible AI API."""
 
 from typing import Literal
 
@@ -24,7 +24,7 @@ class ChatResult(BaseModel):
     latency_seconds: float
 
 
-# --- The parts of Vultr's reply that we use. Any other fields are ignored. ---
+# --- The parts of the provider's reply that we use. Any other fields are ignored. ---
 
 
 class ApiMessage(BaseModel):

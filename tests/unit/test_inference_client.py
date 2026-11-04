@@ -1,6 +1,6 @@
-"""Tests the Vultr client using fake replies, so they use no network and cost nothing.
+"""Tests the AI client using fake replies, so they use no network and cost nothing.
 
-The fake replies follow the formats in Vultr's API reference.
+The fake replies follow the OpenAI-compatible format that providers document.
 """
 
 import json
@@ -410,15 +410,15 @@ def settings(**values) -> Settings:
 
 @pytest.mark.parametrize("key", [None, "", "   "])
 def test_missing_key_gives_a_clear_error(key, monkeypatch):
-    monkeypatch.delenv("VULTR_SERVERLESS_INFERENCE_API_KEY", raising=False)
+    monkeypatch.delenv("AI_API_KEY", raising=False)
 
-    with pytest.raises(InferenceNotConfiguredError, match="VULTR_SERVERLESS_INFERENCE_API_KEY"):
-        create_inference_client(settings(vultr_serverless_inference_api_key=key))
+    with pytest.raises(InferenceNotConfiguredError, match="AI_API_KEY"):
+        create_inference_client(settings(ai_api_key=key))
 
 
 def test_client_is_built_from_settings():
     client = create_inference_client(
-        settings(vultr_serverless_inference_api_key=FAKE_KEY, vultr_inference_model="chosen-model")
+        settings(ai_api_key=FAKE_KEY, ai_model="chosen-model")
     )
 
     assert client.model == "chosen-model"
@@ -426,7 +426,7 @@ def test_client_is_built_from_settings():
 
 
 def test_key_copied_with_stray_spaces_still_works():
-    client = create_inference_client(settings(vultr_serverless_inference_api_key=f"  {FAKE_KEY}\n"))
+    client = create_inference_client(settings(ai_api_key=f"  {FAKE_KEY}\n"))
 
     assert client._api_key.get_secret_value() == FAKE_KEY
     client.close()
@@ -435,16 +435,16 @@ def test_key_copied_with_stray_spaces_still_works():
 @pytest.mark.parametrize("url", ["http://api.vultrinference.com/v1", "api.vultrinference.com/v1", ""])
 def test_unencrypted_base_url_is_refused(url):
     with pytest.raises(ValidationError, match="https"):
-        settings(vultr_inference_base_url=url)
+        settings(ai_base_url=url)
 
 
 @pytest.mark.parametrize(
     "values",
     [
-        {"vultr_inference_timeout_seconds": 0},
-        {"vultr_inference_max_attempts": 0},
-        {"vultr_inference_max_attempts": 99},
-        {"vultr_inference_max_completion_tokens": 0},
+        {"ai_timeout_seconds": 0},
+        {"ai_max_attempts": 0},
+        {"ai_max_attempts": 99},
+        {"ai_max_completion_tokens": 0},
     ],
 )
 def test_unsafe_limits_are_refused(values):

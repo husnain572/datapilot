@@ -1,6 +1,10 @@
 # DataPilot implementation plan
 
-**Goal:** a working, deployed entry for the Vultr: Agent Rush Hackathon, Challenge 1 ("Blast Radius Zero").
+**Goal:** a working, deployed entry for the Vultr: Agent Rush Hackathon.
+
+**Budget: $0.** The owner can't pay anything, so the app runs on the Vultr server (paid from the hackathon credit) and OpenRouter's free AI models.
+
+**Challenge choice:** Challenge 1 ("Blast Radius Zero") requires Vultr Serverless Inference, which we no longer use. Challenge 2 ("Powering the Future of Work") makes it optional. The owner should enter Challenge 2 or get written approval from the organizers.
 
 **Deadline:** **Nov 7, 2026, 12:00 am Pakistan time** (Nov 6, 19:00 UTC), confirmed by the owner. **Our target is to submit by Nov 6, 9:00 pm PKT (16:00 UTC)**, or earlier if we can, which leaves at least a 3-hour buffer.
 
@@ -9,7 +13,7 @@ The rule is **deploy early, then improve**. Times are PKT and are targets.
 | When | Phase | Finished when |
 |---|---|---|
 | Done | **0 Docs, 1 Foundation, 2 Upload and profiling, early deployment** | Live at http://66.42.63.156 |
-| Nov 4 | **3 Vultr AI client** | Tests pass and a real call succeeds with the owner's key |
+| Nov 4 | **3 AI client** | Tests pass and a real call succeeds with the owner's free key |
 | Nov 5, morning | **4 Analysis agent:** question to validated plan | Plans use only real columns, tested with real model output |
 | Nov 5, afternoon | **5 Code generation and Docker sandbox** | Each attack test is contained on the VM, shown by real output |
 | Nov 5, evening | **6 Validation and explanation** | Sample question gives verified numbers |
@@ -43,7 +47,7 @@ The rule is **deploy early, then improve**. Times are PKT and are targets.
 | New Vultr account (email never used on Vultr) plus hackathon gift code | $200 free credit | Now |
 | GitHub account | Free | Phase 1 |
 | Vultr VM: 2 vCPU, 4 GB RAM, current Ubuntu LTS | Paid from credits; check the price in the console first | Phase 8a |
-| Serverless Inference subscription and API key | Paid from credits; read the charges notice | Phase 4 |
+| OpenRouter account and API key | Free; no payment details needed | Now |
 | Domain name (optional) | Free option: an `sslip.io` address based on the server's IP | Phase 8a |
 
 ## Submission checklist (from the official hackathon pages)
@@ -52,7 +56,8 @@ The rule is **deploy early, then improve**. Times are PKT and are targets.
 - [ ] Public GitHub repo with setup instructions and docs
 - [ ] MIT-compliant, original code
 - [ ] README explains the Vultr services used
-- [ ] Backend deployed on a Vultr VM, with LLM calls through Serverless Inference
+- [ ] Backend deployed on a Vultr VM
+- [ ] Challenge chosen and its AI rule met (see Challenge choice above)
 - [ ] Public demo URL
 - [ ] Demo video showing one containment moment
 - [ ] Slide presentation and cover image
@@ -62,7 +67,7 @@ The rule is **deploy early, then improve**. Times are PKT and are targets.
 
 ## Open questions
 
-- [ ] What are the VM and inference subscription prices? (Check in the console.)
+- [ ] Will organizers accept a free model for this entry? (Ask in Discord.)
+- [ ] Is OpenRouter's free limit of 50 requests a day enough for the demo and judges? (Measure in Phase 4.)
 - [ ] Does gVisor work on our VM? (Test in Phase 3.)
-- [ ] Which model gives the best results? (Compare in Phase 4.)
-- [ ] What are the inference rate limits? (Not found in the docs; observe in Phase 4.)
+- [ ] Which free model gives the best results? (Compare in Phase 4.)
