@@ -29,6 +29,8 @@ In testing, the AI's first attempt reported 48 missing cells when the real count
 4. See the plan, code, logs, verified figures, interactive charts, insights, and downloads.
 5. Open the **Containment Lab** tab to watch the sandbox stop real attacks.
 
+![Interactive charts and verified tables](docs/screenshots/charts.png)
+
 ![The Containment Lab showing contained attacks](docs/screenshots/containment-lab.png)
 
 ## How it works
