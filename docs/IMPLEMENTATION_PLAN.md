@@ -10,24 +10,17 @@
 
 The rule is **deploy early, then improve**. Times are PKT and are targets.
 
-| When | Phase | Finished when |
+| When | Phase | Status |
 |---|---|---|
-| Done | **0 Docs, 1 Foundation, 2 Upload and profiling, early deployment** | Live at http://66.42.63.156 |
-| Nov 4 | **3 AI client** | Tests pass and a real call succeeds with the owner's free key |
-| Nov 5, morning | **4 Analysis agent:** question to validated plan | Plans use only real columns, tested with real model output |
-| Nov 5, afternoon | **5 Code generation and Docker sandbox** | Each attack test is contained on the VM, shown by real output |
-| Nov 5, evening | **6 Validation and explanation** | Sample question gives verified numbers |
-| Nov 6, by 12:00 pm | **7 Dashboard and reports** | Full flow works in a browser on the public URL |
-| Nov 6, by 3:00 pm | **8 Testing and final deployment** | Real test results recorded, live site verified |
-| Nov 6, by 9:00 pm | **Delivery:** README, slides, cover image, video, submission | Entry submitted on lablab.ai |
-
-**Feature freeze: Nov 6, 12:00 pm PKT.** After that, we only fix bugs and prepare the submission.
+| Nov 4 | 0 Docs, 1 Foundation, 2 Upload and profiling, early deployment | Done |
+| Nov 4–5 | 3 AI client, 4 Analysis agent, 5 Code generation and sandbox, 6 Validation and explanation, 7 Dashboard and reports, 8 Testing and final deployment | Done |
+| By Nov 6, 9:00 pm | **Delivery:** video, slides, cover image, public repo, submission | The owner's next step |
 
 ## Scope
 
 **Must have:** upload, profile, agent, sandbox, verification, charts, Markdown report, Containment Lab, live deployment.
 
-**Cut unless we're ahead of schedule:** PDF report, gVisor, session history, landing-page polish, processed-CSV export, comparing models beyond finding one that works.
+**Left out to keep the project simple and free:** PDF report (Markdown only), PNG files from the server (each chart has a browser download button), gVisor, saved session history beyond the current browser session.
 
 **Vultr credit:** $200 applied, and it expires 30 days after signup.
 
@@ -67,7 +60,4 @@ The rule is **deploy early, then improve**. Times are PKT and are targets.
 
 ## Open questions
 
-- [ ] Will organizers accept a free model for this entry? (Ask in Discord.)
-- [ ] Is OpenRouter's free limit of 50 requests a day enough for the demo and judges? (Measure in Phase 4.)
-- [ ] Does gVisor work on our VM? (Test in Phase 3.)
-- [ ] Which free model gives the best results? (Compare in Phase 4.)
+- [ ] Will organizers accept a free model for a Challenge 1 entry, or should this enter Challenge 2? (The owner should ask in Discord.)

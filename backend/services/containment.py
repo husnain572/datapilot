@@ -12,7 +12,7 @@ from backend.schemas.analysis import ContainmentReport, ContainmentResult
 from backend.services.executor_client import ExecutionResult, ExecutorClient
 
 LAB_CSV = "item,amount\nA,1\nB,2\n"
-RUN_TIMEOUT_SECONDS = 6
+RUN_TIMEOUT_SECONDS = 15
 
 
 def _metrics(run: ExecutionResult) -> dict[str, float]:
@@ -66,7 +66,7 @@ def _judge_disk(run: ExecutionResult) -> tuple[bool, str]:
     written = _metrics(run).get("written_mb")
     if written is None:
         return False, f"The run ended with status '{run.status}'."
-    return written <= 64, f"Stopped after {written:.0f} MB, where the limit is 64 MB."
+    return written <= 64, f"Stopped after {written:.0f} MB, by the limits of 32 MB per file and 64 MB of space."
 
 
 @dataclass(frozen=True)

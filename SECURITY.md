@@ -2,7 +2,7 @@
 
 DataPilot runs code written by an AI model, on data uploaded by strangers. We treat both as hostile. This document describes the intended design and what it can't protect against.
 
-> **Status:** none of the sandbox controls below are built yet. They are the design for Phase 3 and will be marked as tested only after real attack tests pass.
+> **Status:** the sandbox controls below are built, and were attack-tested on the real server. Results are in [docs/BUILD_STATUS.md](docs/BUILD_STATUS.md). Testing can show that specific attacks fail, but it can't guarantee that all attacks will.
 
 ## What we protect
 
@@ -15,11 +15,11 @@ DataPilot runs code written by an AI model, on data uploaded by strangers. We tr
 
 | Layer | Control | Stops |
 |---|---|---|
-| Network | Firewall allows only ports 22, 80, 443 (to be verified). Nginx exposes only Streamlit. Executor isn't public. | Direct attacks on internal services |
-| Application | Upload limits, input validation, rate limits, demo access code, daily AI spending cap | Bad files, abuse, runaway costs |
-| Executor | Separate service, the only one with Docker access, applies fixed sandbox settings | A compromised backend or bad code choosing weaker settings |
+| Network | Firewall allows only ports 22 and 80. Nginx exposes only Streamlit. The backend and executor listen only on the server itself. | Direct attacks on internal services |
+| Application | Upload limits, input validation, one or two analyses at a time, demo access code, daily AI request limit | Bad files, abuse, using up the free AI allowance |
+| Executor | Separate service and user, the only one with Docker access. Token-protected, can't read `.env`, and applies fixed sandbox settings | A compromised backend or bad code choosing weaker settings |
 | Sandbox | The settings listed below | Damage from generated code |
-| Output | Pydantic validation, file type checks, symlink rejection, no generated HTML shown | Malicious output reaching users |
+| Output | No files leave the sandbox, only capped JSON validated by Pydantic. Charts are plain values, and text is shown without links or images | Malicious output reaching users |
 | Results | Independent recalculation and a number check on the AI's text | Wrong or invented numbers |
 
 ## Sandbox settings
@@ -33,23 +33,24 @@ DataPilot runs code written by an AI model, on data uploaded by strangers. We tr
 | `--security-opt no-new-privileges` | Code can't gain more privileges later |
 | Default seccomp profile | Blocks risky requests to the Linux kernel |
 | `--memory`, `--cpus`, `--pids-limit` | Limits memory, CPU, and process count, which stops memory and fork bombs |
-| File-size limits and fixed-size disk area | Code can't fill the server's disk |
+| File-size limit, 64 MB temporary space in memory, capped output | Code can't fill the server's disk |
 | Timeout enforced from outside | Stops infinite loops |
 | Read-only dataset, no environment secrets | Code can't alter the data or find keys |
 | New container per attempt | Nothing carries over between runs |
 
-gVisor (`runsc`) will be added as a second barrier if it works on our Vultr VM.
+gVisor isn't in use. The executor has a setting for it, so it can be added later as a second barrier.
 
 ## Remaining risks
 
 Docker doesn't guarantee complete security. These risks remain:
 
-1. **Kernel escape.** Containers share the server's Linux kernel, so a kernel bug could let code break out. gVisor reduces this risk but doesn't remove it. Mitigations: keep the server patched, and keep little of value on it.
-2. **Executor compromise.** The executor has Docker access, which amounts to root on the server. It's kept small, private, and token-protected.
+1. **Kernel escape.** Containers share the server's Linux kernel, so a kernel bug could let code break out. Mitigations: keep the server patched, and keep little of value on it. The AI key is on this server, so an escape could expose it. It's a free-tier key with no payment attached.
+2. **Executor compromise.** The executor has Docker access, which amounts to root on the server. It's kept small, private, and token-protected. Its user can also read the app's folders except `.env`, including uploaded datasets.
 3. **Prompt injection.** Text in a CSV could try to manipulate the AI. Bad code would still run in the sandbox and its numbers would still be checked, but a misleading explanation is possible.
 4. **Wrong analysis logic.** Validation can show that a calculation was performed correctly. It can't prove it was the right calculation for the question, so we show the code and the assumptions.
-5. **Free AI provider.** Prompts go to OpenRouter and its model hosts, and free models may keep them. We send column details, statistics, and small samples, never a whole dataset, but those samples can include real values. Don't upload sensitive data.
-6. **Public demo abuse.** Limits reduce abuse but won't stop a determined attacker. Don't upload sensitive data to the demo.
+5. **No HTTPS.** The demo uses plain HTTP on an IP address, so the access code and uploaded data aren't encrypted in transit.
+6. **Free AI provider.** Prompts go to OpenRouter and its model hosts, and free models may keep them. We send column details, statistics, and small samples, never a whole dataset, but those samples can include real values. Don't upload sensitive data.
+7. **Public demo abuse.** Limits reduce abuse but won't stop a determined attacker. Don't upload sensitive data to the demo.
 
 Checks on generated code are only an early warning and can be bypassed. The sandbox is the real boundary.
 
@@ -57,7 +58,8 @@ Checks on generated code are only an early warning and can be bypassed. The sand
 
 - Secrets live only in `.env`, which Git ignores.
 - Secrets never enter the sandbox or the logs.
-- We review staged files before every push and scan the repo before it goes public.
+- The executor gets its token from its own file, without the AI key.
+- We review staged files before every push, and scan the repo before it goes public.
 - If a key leaks, revoke it in the Vultr console first, then remove it from the code. Deleting it from Git isn't enough, because it stays in the history.
 
 ## Reporting a problem

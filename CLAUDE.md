@@ -11,6 +11,8 @@ AI plans, writes code, and explains. Python calculates. **The AI must never supp
 ## Rules that must not be broken
 - Never run generated code on the Mac or inside the backend process. It runs only in the sandbox on the Vultr VM.
 - Docker is not available on this Mac (macOS 12, Intel). Don't try to install it.
+- This Mac sleeps after 1 minute idle, which pauses long-running commands. Run long tests on the server, or use `caffeinate -i`.
+- Production is on the Vultr server. Update it with `scripts/deploy_server.sh` (see `docs/DEPLOYMENT.md`). Never overwrite its `.env` or delete uploaded datasets.
 - Only the executor may access the Docker socket. Never give it to the backend or the sandbox.
 - Keep secrets out of the sandbox, logs, and Git. Never ask for API keys in chat. The owner enters them in `.env`.
 - The owner can't pay anything, so runtime AI uses OpenRouter's free models (the owner's decision, Nov 4, 2026). Don't change providers without asking. Vultr Serverless Inference works by changing settings.
