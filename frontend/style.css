@@ -1,5 +1,6 @@
 /* DataPilot's look. It uses system fonts and no outside files, so it adds no loading time. */
-html, body, [class*="st-"], button, input, textarea {
+/* Set on the app as a whole, because icons rely on keeping their own icon font. */
+html, body, .stApp {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
 }
 [data-testid="stHeader"] { background: transparent; }
