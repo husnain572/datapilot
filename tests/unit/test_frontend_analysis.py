@@ -122,14 +122,14 @@ def test_completed_analysis_shows_results_verification_and_insights(run_page):
     assert not page.exception
     assert any("1,234.50" == metric.value for metric in page.metric)
     assert any("1 of 2 results" in item.value for item in page.success)
-    assert any("✅ Verified" in item.value for item in page.caption)
-    assert any("Not independently checked" in item.value for item in page.caption)
+    assert any("✅ Verified" in item.value for item in page.markdown)
+    assert any("Not independently checked" in item.value for item in page.markdown)
     assert any("Promote pens" in item.value for item in page.markdown)
     assert any("don't prove" in item.value for item in page.info)
     assert any("1 AI statement" in item.value for item in page.caption)
-    assert "Analysis plan" in labels(page.expander)
-    assert "Generated Python code" in labels(page.expander)
-    assert any(label.startswith("Execution log") for label in labels(page.expander))
+    assert "Analysis plan" in labels(page.tabs)
+    assert "Generated Python code" in labels(page.tabs)
+    assert any(label.startswith("Execution log") for label in labels(page.tabs))
     assert page.code[0].value == COMPLETED["code"]
 
 
@@ -139,14 +139,15 @@ def test_links_and_images_from_the_ai_are_shown_as_plain_text(run_page):
     observation = next(item.value for item in page.markdown if "evil" in item.value)
     assert "![x](" not in observation
     assert "[click](" not in observation
-    assert r"\!\[x\]\(" in observation
+    assert "https://" not in observation
+    assert "&#33;&#91;x&#93;&#40;" in observation
 
 
 def test_the_access_code_is_sent_to_the_backend(run_page, monkeypatch):
     backend = FakeBackend()
     page = run_page(backend, analyze=False)
 
-    page.sidebar.text_input(key="access_code").input("my-code")
+    page.text_input(key="access_code").input("my-code")
     page.text_area(key="question").input("Total revenue?")
     next(b for b in page.button if b.label == "Analyze").click().run()
 
@@ -254,3 +255,14 @@ def test_spreadsheet_formulas_in_downloads_are_neutralized():
     assert "'@x" in output
     assert "\n5" in output.replace("\r", "")
     assert json.dumps("safe")[1:-1] in output
+
+
+def test_html_in_ai_text_cannot_become_page_markup(run_page):
+    hostile = '<img src=x onerror="alert(1)"><script>alert(2)</script>'
+    record = {**COMPLETED, "insights": {**COMPLETED["insights"], "observations": [hostile]}}
+
+    page = run_page(FakeBackend(record))
+
+    shown = " ".join(item.value for item in page.markdown if "alert" in item.value)
+    assert "<script" not in shown
+    assert "<img" not in shown

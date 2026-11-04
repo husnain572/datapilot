@@ -15,7 +15,7 @@ def test_shows_success_when_backend_is_healthy(monkeypatch):
     page = AppTest.from_file(APP_PATH).run()
 
     assert not page.exception
-    assert page.success[0].value == "Backend connected."
+    assert any("Backend connected" in item.value for item in page.markdown)
     assert not page.error
 
 
@@ -26,4 +26,4 @@ def test_shows_error_when_backend_is_unreachable(monkeypatch):
 
     assert not page.exception
     assert "Can't reach the backend" in page.error[0].value
-    assert not page.success
+    assert not any("Backend connected" in item.value for item in page.markdown)

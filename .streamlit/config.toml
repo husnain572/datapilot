@@ -5,3 +5,13 @@ gatherUsageStats = false
 [server]
 # Megabytes. Matches the backend's limit, which is the one actually enforced.
 maxUploadSize = 25
+
+[client]
+toolbarMode = "minimal"
+
+[theme]
+base = "light"
+primaryColor = "#2563eb"
+backgroundColor = "#f5f7fb"
+secondaryBackgroundColor = "#eef2f9"
+textColor = "#111c33"

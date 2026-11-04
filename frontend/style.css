@@ -1,0 +1,65 @@
+/* DataPilot's look. It uses system fonts and no outside files, so it adds no loading time. */
+html, body, [class*="st-"], button, input, textarea {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Inter, Roboto, Helvetica, Arial, sans-serif;
+}
+[data-testid="stHeader"] { background: transparent; }
+[data-testid="stDecoration"], footer { display: none; }
+.block-container { max-width: 1180px; padding-top: 1.5rem; padding-bottom: 4rem; }
+
+/* Header */
+.dp-hero {
+  background: linear-gradient(120deg, #0b1f4b 0%, #173a8a 60%, #2563eb 100%);
+  border-radius: 20px; color: #fff; padding: 30px 36px; margin-bottom: 18px;
+  box-shadow: 0 14px 34px rgba(15, 40, 100, .18);
+}
+.dp-hero-top { display: flex; justify-content: space-between; align-items: center; gap: 12px; flex-wrap: wrap; }
+.dp-brand { font-size: 1.7rem; font-weight: 750; letter-spacing: -.02em; }
+.dp-tagline { color: #cfe0ff; font-size: 1.02rem; margin-top: 6px; }
+.dp-pitch { color: #e8efff; max-width: 760px; margin-top: 14px; line-height: 1.55; font-size: 1.02rem; }
+.dp-status { background: rgba(255,255,255,.14); border-radius: 999px; padding: 5px 13px; font-size: .84rem; white-space: nowrap; }
+.dp-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #4ade80; margin-right: 7px; }
+
+/* Cards */
+.dp-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(230px, 1fr)); gap: 14px; margin: 6px 0 18px; }
+.dp-card { background: #fff; border: 1px solid #e3e8f2; border-radius: 14px; padding: 18px 20px; box-shadow: 0 2px 8px rgba(17,28,51,.04); }
+.dp-card-title { font-weight: 680; font-size: 1rem; margin-bottom: 6px; color: #111c33; }
+.dp-card-body { color: #4a5670; font-size: .93rem; line-height: 1.5; }
+.dp-card-label { color: #2563eb; font-weight: 700; font-size: .76rem; letter-spacing: .06em; text-transform: uppercase; margin-bottom: 6px; }
+.dp-section { font-size: 1.22rem; font-weight: 700; margin: 22px 0 8px; color: #111c33; letter-spacing: -.01em; }
+.dp-evidence { color: #4a5670; font-size: .88rem; margin-top: 8px; padding-top: 8px; border-top: 1px dashed #e3e8f2; }
+.dp-list { margin: 0; padding-left: 18px; color: #26324b; line-height: 1.6; }
+.dp-list li { margin-bottom: 6px; }
+
+/* Streamlit parts */
+[data-testid="stMetric"] { background: #fff; border: 1px solid #e3e8f2; border-radius: 14px; padding: 14px 18px; box-shadow: 0 2px 8px rgba(17,28,51,.04); }
+[data-testid="stMetricValue"] { font-weight: 720; color: #0b1f4b; }
+[data-testid="stForm"], [data-testid="stFileUploaderDropzone"] { background: #fff; border-color: #e3e8f2; border-radius: 14px; }
+[data-testid="stExpander"] details { background: #fff; border: 1px solid #e3e8f2; border-radius: 14px; }
+.stButton > button, [data-testid="stDownloadButton"] > button, [data-testid="stFormSubmitButton"] > button { border-radius: 10px; font-weight: 600; }
+[data-testid="stAlert"] { border-radius: 12px; }
+[data-testid="stPlotlyChart"], [data-testid="stDataFrame"] { background: #fff; border: 1px solid #e3e8f2; border-radius: 14px; padding: 6px; }
+.stTabs [data-baseweb="tab-list"] { gap: 6px; }
+.stTabs [data-baseweb="tab"] { font-weight: 600; }
+
+/* Verification labels */
+.dp-pill { display: inline-block; border-radius: 999px; padding: 3px 11px; font-size: .79rem; font-weight: 600; margin: 4px 0 10px; }
+.dp-pill-verified { background: #e3f7ec; color: #11693b; }
+.dp-pill-mismatch { background: #fde8e8; color: #a11d1d; }
+.dp-pill-not_checked { background: #eef1f6; color: #4a5670; }
+
+/* Progress tracker */
+.dp-steps { display: flex; gap: 8px; flex-wrap: wrap; margin: 10px 0 6px; }
+.dp-step { flex: 1 1 130px; background: #fff; border: 1px solid #e3e8f2; border-radius: 12px; padding: 12px 14px; color: #8290a8; font-weight: 600; font-size: .92rem; }
+.dp-step-active { border-color: #2563eb; color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.12); }
+.dp-step-done { background: #e3f7ec; border-color: #bfe9d0; color: #11693b; }
+.dp-step-note { color: #4a5670; font-size: .9rem; margin-top: 4px; }
+
+/* Containment Lab */
+.dp-attack-result { font-weight: 700; font-size: .85rem; margin-top: 8px; }
+.dp-contained { color: #11693b; }
+.dp-breached { color: #a11d1d; }
+
+@media (max-width: 640px) {
+  .dp-hero { padding: 22px; }
+  .block-container { padding-left: 16px; padding-right: 16px; }
+}
