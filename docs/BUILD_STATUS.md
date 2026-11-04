@@ -6,9 +6,11 @@
 
 **Deadline: Nov 7, 2026, 12:00 am PKT. Target: submit by Nov 6, 9:00 pm PKT, or earlier.**
 
-1. The owner creates a free OpenRouter key, adds it to `.env` on the Mac as `AI_API_KEY`, and runs `uv run python scripts/check_inference.py`.
-2. Merge `phase-3-vultr-inference` into `main` once that passes.
+1. Merge `phase-3-vultr-inference` into `main`.
+2. Check whether Docker is installed on the server.
 3. Start Phase 4 (analysis agent).
+
+The owner's key is in `.env` on the Mac only. The server still needs its own copy before AI features are deployed.
 
 ## Progress
 
@@ -17,7 +19,7 @@
 | 0 Docs, 1 Foundation | Done | |
 | 2 Upload and profiling | Done and deployed | Merged in PR #1; the owner reports it working on the live site |
 | Early deployment | Done by the owner | Vultr Ubuntu 24.04, Nginx, systemd, http://66.42.63.156 |
-| 3 AI client | **Built and tested with fake replies; real call not yet run** | Now uses OpenRouter's free models; needs the owner's key |
+| 3 AI client | Done on its branch; real call succeeded from the Mac | Uses OpenRouter's free models; not merged or deployed |
 | 4 Analysis agent | Not started | |
 | 5 Code generation and Docker sandbox | Not started | Not yet checked whether Docker is installed on the server |
 | 6 Validation and explanation | Not started | |
@@ -34,7 +36,7 @@
 
 ## AI provider facts (Nov 4, 2026)
 
-**OpenRouter (in use), from its docs and live catalog:** `https://openrouter.ai/api/v1`. Free models need no credits, with limits of 20 requests a minute and 50 a day. The catalog listed 16 free entries, and `openrouter/free` is listed with structured output. Real behavior is unconfirmed until the first real call.
+**OpenRouter (in use), from its docs and live catalog:** `https://openrouter.ai/api/v1`. Free models need no credits, with limits of 20 requests a minute and 50 a day. The catalog listed 16 free entries, and `openrouter/free` is listed with structured output. Chat and structured output both worked in a real call on Nov 4, 2026.
 
 **Vultr Serverless Inference (not in use, available by changing settings):** source is https://api.vultrinference.com/docs and its live catalog. Older docs.vultr.com articles are out of date.
 
@@ -49,11 +51,14 @@
 uv run pytest -q
 124 passed, 1 warning
 
-uv run python scripts/check_inference.py   (no key set)
-FAILED (InferenceNotConfiguredError): AI_API_KEY is not set. Add it to the .env file.
+uv run python scripts/check_inference.py   (real call, model openrouter/free)
+1. Catalog: OK (417 models, includes this one)
+2. Chat: OK, answered 'ready' in 8.115s, 72 tokens
+3. Structured output: OK, validated as {'status': 'ok'}
+All checks passed.
 ```
 
-The inference tests use fake replies in the documented OpenAI-compatible format. **No real AI call has been made yet**, so model behavior, including strict `json_schema` handling, is still unconfirmed.
+The other inference tests use fake replies. The real check used a very simple format, so complex plans are still untested. `openrouter/free` can choose a different model per request, so quality and speed may vary.
 
 ## Known issues
 
@@ -62,6 +67,7 @@ The inference tests use fake replies in the documented OpenAI-compatible format.
 - The full upload is received before the size limit applies. Nginx should also limit request size (not yet checked on the server).
 - The live site uses HTTP, so traffic isn't encrypted. Don't upload sensitive data.
 - **Before AI goes live:** the public site has no access code or usage limit, so strangers could use up the free daily limit. Both must be added before the AI features are deployed.
+- **API key exposure:** the owner's OpenRouter key was pasted into a chat session. Replace it with a new key before the project is finished.
 - **Hackathon rule:** Challenge 1 requires Vultr Serverless Inference, so this project should enter Challenge 2 or get the organizers' approval.
 - `~/.git` exists in the home folder. `git add` run from the home folder could stage personal files.
 
