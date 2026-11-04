@@ -6,69 +6,61 @@
 
 **Deadline: Nov 7, 2026, 12:00 am PKT. Target: submit by Nov 6, 9:00 pm PKT, or earlier.**
 
-1. Merge the `phase-2-upload-profiling` pull request into `main`.
-2. Create the Vultr VM, which is blocking the sandbox work. Check that the SSH key works for logging in.
-3. Build Phase 3 (sandbox and executor) on the VM.
-4. Create the Serverless Inference subscription for Phase 4.
-
-GitHub uses HTTPS by the owner's choice (SSH gave a permission error, which wasn't investigated).
+1. The owner adds their inference key to `.env` on the Mac and runs `uv run python scripts/check_inference.py`.
+2. Merge `phase-3-vultr-inference` into `main` once that passes.
+3. Start Phase 4 (analysis agent).
 
 ## Progress
 
 | Phase | Status | Notes |
 |---|---|---|
-| 0 Docs | Done | |
-| 1 Foundation | Done | Pushed to GitHub over HTTPS |
-| 2 Upload and profiling | Done on its branch, tested on the Mac | Waiting for merge; not yet deployed |
-| 8a Early deploy | Not started | Vultr credit applied; VM not created |
-| 3 Sandbox | Not started | Needs the VM, since Docker runs only there |
-| 4 Vultr AI client | Not started | Needs an inference API key |
-| 5 Agent workflow | Not started | |
-| 6 Dashboard | Partly done | Upload and profile screens exist; analysis screens don't |
-| 7 Testing | Not started | |
-| 8b Production hardening | Not started | |
-| 9 Delivery | Not started | |
+| 0 Docs, 1 Foundation | Done | |
+| 2 Upload and profiling | Done and deployed | Merged in PR #1; the owner reports it working on the live site |
+| Early deployment | Done by the owner | Vultr Ubuntu 24.04, Nginx, systemd, http://66.42.63.156 |
+| 3 Vultr AI client | **Built and tested with fake replies; real call not yet run** | Needs the owner's key |
+| 4 Analysis agent | Not started | |
+| 5 Code generation and Docker sandbox | Not started | Not yet checked whether Docker is installed on the server |
+| 6 Validation and explanation | Not started | |
+| 7 Dashboard and reports | Partly done | Upload and profile screens exist |
+| 8 Testing and final deployment | Not started | |
 
 ## What works today
 
-Tested on the owner's Mac (macOS 12.7.6, Intel, Python 3.11.0):
+- **Live site:** http://66.42.63.156 returns Streamlit through Nginx. Every path goes to Streamlit, so the FastAPI backend isn't publicly reachable.
+- **Upload and profiling:** see the tests below.
+- **Inference client (`backend/services/inference.py`):** chat and structured output, with Vultr's retry rules, timeouts, and clear error types. It's not used by any screen yet.
 
-- **Upload:** CSV upload with validation, normalized storage, random IDs, and clear error messages.
-- **Rejected files tested:** wrong file type, too large, binary, empty, header-only, uneven rows, duplicate or blank column names, unclosed quotes, too many rows or columns, and malicious filenames.
-- **Profile:** row and column counts, column types, missing values, duplicates, number statistics, category summaries, and sample records.
-- **Other API features:** preview, delete, and automatic removal after 24 hours.
-- **Screen:** upload, sample dataset button, profile dashboard, and remove button.
+**Not built yet:** agent, sandbox, analysis, and reports. `SECURITY.md` describes a sandbox design that hasn't been tested.
 
-**Not built yet:** sandbox, AI, analysis, reports, and deployment. `SECURITY.md` describes a sandbox design that hasn't been tested.
+## Verified Vultr API facts (Nov 4, 2026)
 
-**Not checked by eye:** the page has been tested automatically, but not yet viewed in a browser with the new upload screens.
+Source: https://api.vultrinference.com/docs and the live model catalog. Older docs.vultr.com articles are out of date.
+
+- **Address and login:** `POST https://api.vultrinference.com/v1/chat/completions`, with `Authorization: Bearer <key>`.
+- **Structured output:** `response_format` with `json_schema`. The catalog lists this for `glm-5.3`, `glm-5.3-flash`, `deepseek-v4.1-flash-1017`, and `qwen3.8-flash-next`.
+- **Limits:** most models allow 120 requests a minute and 16 at once. Requests can take about nine minutes before a 504.
+- **Prices per million tokens (input/output):** `glm-5.3` $0.75/$3.00, `glm-5.3-flash` $0.10/$0.35, `deepseek-v4.1-flash-1017` $0.15/$0.60, `qwen3.8-flash-next` $0.10/$0.20.
 
 ## Latest test results (Nov 4, 2026)
 
 ```
 uv run pytest -q
-64 passed, 1 warning
+124 passed, 1 warning
 
-Sample dataset, real page and real backend:
-Rows 1,010 | Columns 5 | Missing values 30 | Duplicate rows 13
-Tabs: Columns, Number statistics, Categories, Preview. 0 exceptions.
-Remove button: dataset deleted, nothing left on disk.
-
-Real API requests:
-Upload sample -> HTTP 201
-Bad row count -> HTTP 422, "Line 2 has 1 values, but the header has 2 columns."
-Not a CSV     -> HTTP 415, "Please upload a .csv file."
-Delete        -> HTTP 204, then HTTP 404
+uv run python scripts/check_inference.py   (no key set)
+FAILED (InferenceNotConfiguredError): VULTR_SERVERLESS_INFERENCE_API_KEY is not set. Add it to the .env file.
 ```
 
-The sample's missing and duplicate counts are also confirmed by a separate calculation in the tests. Rows are 1,000 generated plus 10 planted duplicates. The 13 duplicates are those 10 plus 3 that occurred by chance.
+All 60 inference tests use fake replies based on Vultr's documented formats. **No real call to Vultr has been made yet**, so model behavior, including strict `json_schema` handling, is still unconfirmed.
 
 ## Known issues
 
 - pytest shows a deprecation warning from a library: Starlette's test client plans to move away from `httpx`. It doesn't affect the app.
-- Pandas treats text like `NA` as missing, so a region code of "NA" (North America) would be counted as missing. To be revisited if time allows.
-- The full upload is received before the size limit applies. Caddy must also limit request size in production (Phase 8a).
-- `~/.git` exists in the home folder. It doesn't affect this project, but `git add` run from the home folder could stage personal files.
+- Pandas treats text like `NA` as missing, so a region code of "NA" (North America) would be counted as missing.
+- The full upload is received before the size limit applies. Nginx should also limit request size (not yet checked on the server).
+- The live site uses HTTP, so traffic isn't encrypted. Don't upload sensitive data.
+- **Before AI goes live:** the public site has no access code or spending cap. Both must be added before the AI features are deployed.
+- `~/.git` exists in the home folder. `git add` run from the home folder could stage personal files.
 
 ## Open questions
 

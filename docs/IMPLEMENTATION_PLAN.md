@@ -8,15 +8,14 @@ The rule is **deploy early, then improve**. Times are PKT and are targets.
 
 | When | Phase | Finished when |
 |---|---|---|
-| Nov 4 | **0 Docs and 1 Foundation** | Done: documents written, app runs on the Mac, tests pass, code is on GitHub |
-| Nov 4 | **8a Early deploy:** VM, login, firewall, Docker | Docker runs on the VM and the backend answers there |
-| Nov 4 | **2 Upload and profiling** | Bad files rejected in tests, sample CSV profiled correctly |
-| Nov 5, morning | **3 Sandbox:** simple revenue container, then restrictions one at a time | Each attack test is contained, shown by real output |
-| Nov 5, afternoon | **4 Vultr AI client** | Real response parsed and validated |
-| Nov 5, evening | **5 Agent workflow** | Demo question works, retries stay within the limit, numbers verified |
-| Nov 6, by 12:00 pm | **6 Dashboard and live deployment with HTTPS** | Full flow works in a browser on the public URL |
-| Nov 6, by 3:00 pm | **7 Testing and 8b Hardening:** malformed files, malicious code, timeouts, access checks, limits, restarts | Real test results recorded |
-| Nov 6, by 9:00 pm | **9 Delivery:** README, slides, cover image, video, submission | Final test passes on the live site and entry is submitted |
+| Done | **0 Docs, 1 Foundation, 2 Upload and profiling, early deployment** | Live at http://66.42.63.156 |
+| Nov 4 | **3 Vultr AI client** | Tests pass and a real call succeeds with the owner's key |
+| Nov 5, morning | **4 Analysis agent:** question to validated plan | Plans use only real columns, tested with real model output |
+| Nov 5, afternoon | **5 Code generation and Docker sandbox** | Each attack test is contained on the VM, shown by real output |
+| Nov 5, evening | **6 Validation and explanation** | Sample question gives verified numbers |
+| Nov 6, by 12:00 pm | **7 Dashboard and reports** | Full flow works in a browser on the public URL |
+| Nov 6, by 3:00 pm | **8 Testing and final deployment** | Real test results recorded, live site verified |
+| Nov 6, by 9:00 pm | **Delivery:** README, slides, cover image, video, submission | Entry submitted on lablab.ai |
 
 **Feature freeze: Nov 6, 12:00 pm PKT.** After that, we only fix bugs and prepare the submission.
 

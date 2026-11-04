@@ -15,7 +15,7 @@ DataPilot runs code written by an AI model, on data uploaded by strangers. We tr
 
 | Layer | Control | Stops |
 |---|---|---|
-| Network | Firewall allows only ports 22, 80, 443. Executor isn't public. | Direct attacks on internal services |
+| Network | Firewall allows only ports 22, 80, 443 (to be verified). Nginx exposes only Streamlit. Executor isn't public. | Direct attacks on internal services |
 | Application | Upload limits, input validation, rate limits, demo access code, daily AI spending cap | Bad files, abuse, runaway costs |
 | Executor | Separate service, the only one with Docker access, applies fixed sandbox settings | A compromised backend or bad code choosing weaker settings |
 | Sandbox | The settings listed below | Damage from generated code |

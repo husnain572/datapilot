@@ -14,7 +14,7 @@ AI plans, writes code, and explains. Python calculates. **The AI must never supp
 - Only the executor may access the Docker socket. Never give it to the backend or the sandbox.
 - Keep secrets out of the sandbox, logs, and Git. Never ask for API keys in chat. The owner enters them in `.env`.
 - Use Vultr Serverless Inference for runtime AI, and never silently swap providers.
-- Check real model IDs at `GET https://api.vultrinference.com/v1/models`. Vultr's docs have been out of date.
+- Check real model IDs at `GET https://api.vultrinference.com/v1/models`. The current API reference is https://api.vultrinference.com/docs. Older articles on docs.vultr.com are out of date.
 - `~/.git` exists in the home folder. Run Git commands only inside this project. Don't delete `~/.git` without approval.
 - Never claim something works without running it. Record real test output in `docs/BUILD_STATUS.md`.
 - Get approval before destructive commands, spending money, or making the repo public.

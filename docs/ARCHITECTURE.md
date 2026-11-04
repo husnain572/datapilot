@@ -5,7 +5,7 @@
 ## Overview
 
 ```
-Browser ──HTTPS──> Caddy ──> Streamlit (screens)
+Browser ──HTTP──> Nginx ──> Streamlit (screens)
                                │ REST
                                ▼
                     FastAPI backend ──HTTPS──> Vultr Serverless Inference
@@ -27,7 +27,7 @@ Browser ──HTTPS──> Caddy ──> Streamlit (screens)
 | Vultr AI model | Recipe writer | Plans, writes code, and explains, but never supplies numbers |
 | Executor | Keeper of the kitchen keys | Builds each sandbox the same safe way, every time |
 | Sandbox | Sealed, disposable kitchen | Runs the code, then gets thrown away |
-| Caddy | Front door | Handles HTTPS and is the only public entrance |
+| Nginx | Front door | The only public entrance; it sends visitors to Streamlit |
 
 ## Data flow for one question
 
@@ -65,8 +65,8 @@ Browser ──HTTPS──> Caddy ──> Streamlit (screens)
 
 | | Your Mac (development) | Vultr VM (production) |
 |---|---|---|
-| Streamlit and FastAPI | Run directly with uv | Docker Compose |
+| Streamlit and FastAPI | Run directly with uv | systemd services |
 | Sandbox | Reached through an SSH tunnel to the VM | Same VM, private network |
-| HTTPS | Not needed | Caddy |
+| Public access | Not needed | Nginx over HTTP on the server's IP (no HTTPS yet, because there's no domain) |
 
 See [SECURITY.md](../SECURITY.md) for the security design and remaining risks.

@@ -4,7 +4,7 @@
 
 Upload a CSV and ask questions in plain English. DataPilot's AI writes the analysis code, Python runs it inside a locked-down sandbox, and the app shows only numbers it has checked.
 
-> **Status: early development.** Only the project foundation exists so far. See [docs/BUILD_STATUS.md](docs/BUILD_STATUS.md) for what works today.
+> **Status: in development.** CSV upload and profiling are live. AI analysis is being built. See [docs/BUILD_STATUS.md](docs/BUILD_STATUS.md) for what works today.
 
 ## Why DataPilot is different
 
@@ -18,8 +18,8 @@ AI assistants can state a wrong number with complete confidence. DataPilot's AI 
 
 | Service | Role | Status |
 |---|---|---|
-| Vultr Serverless Inference | All AI model calls | Planned (Phase 4) |
-| Vultr Cloud Compute | Hosts the app and the Docker sandbox | Planned (Phase 8a) |
+| Vultr Serverless Inference | All AI model calls | Client built; analysis features in progress |
+| Vultr Cloud Compute | Hosts the app and the Docker sandbox | App deployed; sandbox in progress |
 
 ## Run it locally
 
@@ -31,6 +31,7 @@ cp .env.example .env                           # create your private settings fi
 uv run uvicorn backend.main:app --reload       # terminal 1: backend
 uv run streamlit run frontend/app.py           # terminal 2: frontend
 uv run pytest                                  # run the tests
+uv run python scripts/check_inference.py       # test the real AI connection (needs your key in .env)
 ```
 
 - Frontend: http://localhost:8501
