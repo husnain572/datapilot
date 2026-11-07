@@ -16,7 +16,8 @@ DataPilot runs code written by an AI model, on data uploaded by strangers. We tr
 | Layer | Control | Stops |
 |---|---|---|
 | Network | Firewall allows only ports 22 and 80. Nginx exposes only Streamlit. The backend and executor listen only on the server itself. | Direct attacks on internal services |
-| Application | Upload limits, input validation, one or two analyses at a time, demo access code, daily AI request limit | Bad files, abuse, using up the free AI allowance |
+| Application | Upload limits, input validation, one or two analyses at a time, a daily AI request limit, and hourly limits for each visitor (no login) | Bad files, abuse, using up the free AI allowance |
+| File formats | Every format is converted to CSV and given the same checks. Excel files are checked for zip bombs before loading, and parsed with XML attacks blocked (defusedxml). Parquet size is checked from its metadata first | Hostile spreadsheets and compressed files |
 | Executor | Separate service and user, the only one with Docker access. Token-protected, can't read `.env`, and applies fixed sandbox settings | A compromised backend or bad code choosing weaker settings |
 | Sandbox | The settings listed below | Damage from generated code |
 | Output | No files leave the sandbox, only capped JSON validated by Pydantic. Charts are plain values, and text is shown without links or images | Malicious output reaching users |
@@ -48,9 +49,10 @@ Docker doesn't guarantee complete security. These risks remain:
 2. **Executor compromise.** The executor has Docker access, which amounts to root on the server. It's kept small, private, and token-protected. Its user can also read the app's folders except `.env`, including uploaded datasets.
 3. **Prompt injection.** Text in a CSV could try to manipulate the AI. Bad code would still run in the sandbox and its numbers would still be checked, but a misleading explanation is possible.
 4. **Wrong analysis logic.** Validation can show that a calculation was performed correctly. It can't prove it was the right calculation for the question, so we show the code and the assumptions.
-5. **No HTTPS.** The demo uses plain HTTP on an IP address, so the access code and uploaded data aren't encrypted in transit.
-6. **Free AI provider.** Prompts go to OpenRouter and its model hosts, and free models may keep them. We send column details, statistics, and small samples, never a whole dataset, but those samples can include real values. Don't upload sensitive data.
-7. **Public demo abuse.** Limits reduce abuse but won't stop a determined attacker. Don't upload sensitive data to the demo.
+5. **No HTTPS.** The demo uses plain HTTP on an IP address, so uploaded data isn't encrypted in transit.
+6. **Open access.** There's no login, so a determined person could use up the day's free AI allowance, for example from many network addresses. Visitors would then see the saved example and a message to try tomorrow. Spreadsheet and Parquet parsing also run in the backend process, not the sandbox, so a bug in those libraries is a risk.
+7. **Free AI provider.** Prompts go to OpenRouter and its model hosts, and free models may keep them. We send column details, statistics, and small samples, never a whole dataset, but those samples can include real values. Don't upload sensitive data.
+8. **Public demo abuse.** Limits reduce abuse but won't stop a determined attacker. Don't upload sensitive data to the demo.
 
 Checks on generated code are only an early warning and can be bypassed. The sandbox is the real boundary.
 

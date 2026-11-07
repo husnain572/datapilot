@@ -51,6 +51,8 @@ class DatasetInfo(BaseModel):
     size_bytes: int
     created_at: datetime
     expires_at: datetime
+    source_format: str = "CSV"
+    source_note: str | None = None
     profile: DatasetProfile
 
 

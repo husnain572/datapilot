@@ -45,7 +45,7 @@ def close(a: float, b: float) -> bool:
 
 def main() -> int:
     base = sys.argv[1] if len(sys.argv) > 1 else "http://127.0.0.1:8000"
-    headers = {"X-Access-Code": os.environ.get("ACCESS_CODE", "")}
+    headers = {"X-Visitor-Id": os.environ.get("VISITOR_ID", "e2e-test")}
     expected = expected_answers()
     with httpx.Client(base_url=base, timeout=60) as client:
         dataset = client.post(

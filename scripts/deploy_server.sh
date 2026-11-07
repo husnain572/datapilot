@@ -31,10 +31,6 @@ if ! grep -q '^EXECUTOR_TOKEN=.' "$ENV_FILE"; then
   printf 'EXECUTOR_TOKEN=%s\n' "$(openssl rand -hex 32)" >> "$ENV_FILE"
 fi
 add_setting EXECUTOR_URL http://127.0.0.1:8100
-if ! grep -q '^ACCESS_CODE=.' "$ENV_FILE"; then
-  sed -i '/^ACCESS_CODE=/d' "$ENV_FILE"
-  printf 'ACCESS_CODE=%s\n' "demo-$(openssl rand -hex 3)" >> "$ENV_FILE"
-fi
 grep -q '^AI_API_KEY=.' "$ENV_FILE" || echo "WARNING: AI_API_KEY isn't set in $ENV_FILE, so analyses won't run."
 # The executor gets only its token, not the rest of .env.
 ( umask 077; grep '^EXECUTOR_TOKEN=' "$ENV_FILE" > /etc/datapilot/executor.env )

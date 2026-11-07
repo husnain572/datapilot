@@ -8,6 +8,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, UploadFi
 from backend.config import Settings, get_settings
 from backend.schemas.datasets import DatasetInfo, DatasetPreview
 from backend.services.csv_validation import CsvValidationError, validate_csv
+from backend.services.file_formats import SUPPORTED_FORMATS, convert_to_csv, file_extension
 from backend.services.profiling import load_dataframe, profile_dataframe, records
 from backend.storage.datasets import DatasetStore, clean_display_name
 
@@ -32,10 +33,14 @@ def _require_dataset(store: DatasetStore, dataset_id: UUID) -> DatasetInfo:
 
 @router.post("", status_code=status.HTTP_201_CREATED)
 def upload_dataset(file: UploadFile, settings: SettingsDep, store: StoreDep) -> DatasetInfo:
-    """Upload a CSV. It's validated and profiled, and stored for a limited time."""
+    """Upload a data file (CSV, TSV, TXT, Excel .xlsx, JSON, or Parquet).
+
+    It's converted to CSV, validated, profiled, and stored for a limited time.
+    """
     filename = clean_display_name(file.filename)
-    if not filename.lower().endswith(".csv"):
-        raise HTTPException(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, "Please upload a .csv file.")
+    if file_extension(filename) not in SUPPORTED_FORMATS:
+        accepted = ", ".join(SUPPORTED_FORMATS)
+        raise HTTPException(status.HTTP_415_UNSUPPORTED_MEDIA_TYPE, f"Please upload one of these file types: {accepted}.")
 
     # Read one byte past the limit, which tells us the file is too big without reading it all.
     raw = file.file.read(settings.max_upload_bytes + 1)
@@ -46,13 +51,14 @@ def upload_dataset(file: UploadFile, settings: SettingsDep, store: StoreDep) -> 
         )
 
     try:
-        validated = validate_csv(raw, settings.max_rows, settings.max_columns)
+        converted = convert_to_csv(filename, raw, settings.max_rows, settings.max_columns)
+        validated = validate_csv(converted.raw, settings.max_rows, settings.max_columns)
     except CsvValidationError as error:
         raise HTTPException(status.HTTP_422_UNPROCESSABLE_CONTENT, str(error)) from error
 
     store.purge_expired()
     profile = profile_dataframe(load_dataframe(validated.text))
-    return store.save(filename, validated.text, profile)
+    return store.save(filename, validated.text, profile, converted.source_format, converted.note)
 
 
 @router.get("/{dataset_id}")

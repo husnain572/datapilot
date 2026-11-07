@@ -31,9 +31,6 @@ Settings are in `/home/deploy/datapilot/.env`, which only `deploy` can read. See
 # VULTR SERVER, as root: show setting names without their values
 sed -E 's/=.*/=<hidden>/' /home/deploy/datapilot/.env
 
-# See the access code
-grep '^ACCESS_CODE=' /home/deploy/datapilot/.env
-
 # After editing a setting
 systemctl restart datapilot-backend datapilot-frontend
 ```

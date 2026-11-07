@@ -1,6 +1,9 @@
-"""Endpoints for asking questions, reading results, and running the Containment Lab."""
+"""Endpoints for asking questions, reading results, and running the Containment Lab.
 
-import hmac
+The site is open to everyone, with no login. Limits per visitor and per day keep the free AI
+allowance and the server from being used up.
+"""
+
 import threading
 import uuid
 from datetime import datetime, timezone
@@ -8,6 +11,7 @@ from typing import Annotated
 from uuid import UUID
 
 from fastapi import APIRouter, BackgroundTasks, Depends, Header, HTTPException, Response, status
+from pydantic import BaseModel
 
 from backend.agent.pipeline import AnalysisPipeline
 from backend.api.datasets import SettingsDep, StoreDep
@@ -17,8 +21,14 @@ from backend.services.containment import run_containment_lab
 from backend.services.executor_client import ExecutorClient, ExecutorError
 from backend.services.inference import InferenceClient, InferenceError, create_inference_client
 from backend.services.report import build_report
-from backend.services.usage import UsageTracker
-from backend.storage.analyses import AnalysisStore
+from backend.services.usage import (
+    REQUESTS_PER_ANALYSIS,
+    UsageTracker,
+    VisitorLimiter,
+    VisitorLimitReached,
+    next_reset,
+)
+from backend.storage.analyses import AnalysisStore, load_example
 
 router = APIRouter(prefix="/api/v1", tags=["analyses"])
 
@@ -27,12 +37,24 @@ analysis_slots = threading.BoundedSemaphore(2)
 lab_slot = threading.BoundedSemaphore(1)
 
 
-def require_access_code(settings: SettingsDep, x_access_code: Annotated[str, Header()] = "") -> None:
-    """Features that use the AI or sandbox need the demo code, so strangers can't exhaust them."""
-    if settings.access_code is None or not settings.access_code.get_secret_value():
-        return  # No code configured, as when developing locally.
-    if not hmac.compare_digest(x_access_code.encode(), settings.access_code.get_secret_value().encode()):
-        raise HTTPException(status.HTTP_401_UNAUTHORIZED, "That access code isn't right.")
+def visitor_id(x_visitor_id: Annotated[str, Header(max_length=200)] = "") -> str:
+    """Who is asking. The frontend passes the visitor's network address. The backend isn't
+    reachable from the internet, so only the frontend can set this."""
+    return x_visitor_id or "unknown"
+
+
+VisitorDep = Annotated[str, Depends(visitor_id)]
+
+
+def usage_tracker(settings: SettingsDep) -> UsageTracker:
+    return UsageTracker(settings.data_dir, settings.ai_daily_request_limit)
+
+
+def check_visitor(settings: SettingsDep, visitor: str, action: str, hourly_limit: int) -> None:
+    try:
+        VisitorLimiter(settings.data_dir).record(visitor, action, hourly_limit)
+    except VisitorLimitReached as error:
+        raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, str(error)) from error
 
 
 def get_analysis_store(settings: SettingsDep) -> AnalysisStore:
@@ -53,7 +75,6 @@ def create_executor(settings: SettingsDep) -> ExecutorClient:
 
 
 AnalysisStoreDep = Annotated[AnalysisStore, Depends(get_analysis_store)]
-AccessDep = Depends(require_access_code)
 
 
 def _run_analysis(
@@ -71,11 +92,33 @@ def _run_analysis(
         analysis_slots.release()
 
 
-@router.post("/analyses", status_code=status.HTTP_202_ACCEPTED, dependencies=[AccessDep])
+class UsageSummary(BaseModel):
+    analyses_left_today: int
+    resets_at: datetime
+
+
+@router.get("/usage")
+def get_usage(settings: SettingsDep) -> UsageSummary:
+    """How many analyses can still run today, shared by everyone."""
+    remaining = usage_tracker(settings).remaining()
+    return UsageSummary(analyses_left_today=remaining // REQUESTS_PER_ANALYSIS, resets_at=next_reset())
+
+
+@router.get("/examples/sales")
+def get_example() -> AnalysisRecord:
+    """A saved, real analysis of the sample data, shown instantly with no AI requests."""
+    record = load_example()
+    if record is None:
+        raise HTTPException(status.HTTP_404_NOT_FOUND, "The example isn't available.")
+    return record
+
+
+@router.post("/analyses", status_code=status.HTTP_202_ACCEPTED)
 def create_analysis(
     request: AnalysisRequest,
     background: BackgroundTasks,
     settings: SettingsDep,
+    visitor: VisitorDep,
     datasets: StoreDep,
     analyses: AnalysisStoreDep,
     ai: Annotated[InferenceClient, Depends(create_ai)],
@@ -92,6 +135,14 @@ def create_analysis(
         if parent is None or parent.dataset_id != request.dataset_id:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "The earlier analysis wasn't found for this dataset.")
 
+    if usage_tracker(settings).remaining() < REQUESTS_PER_ANALYSIS:
+        raise HTTPException(
+            status.HTTP_429_TOO_MANY_REQUESTS,
+            "Today's free analyses have all been used. They reset at midnight UTC. "
+            "You can still see the example analysis and run the Containment Lab.",
+        )
+    check_visitor(settings, visitor, "analysis", settings.visitor_analyses_per_hour)
+
     if not analysis_slots.acquire(blocking=False):
         raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "The server is busy. Please try again in a minute.")
 
@@ -107,9 +158,7 @@ def create_analysis(
     analyses.purge_expired()
     analyses.save(record)
 
-    pipeline = AnalysisPipeline(
-        ai, executor, analyses, UsageTracker(settings.data_dir, settings.ai_daily_request_limit)
-    )
+    pipeline = AnalysisPipeline(ai, executor, analyses, usage_tracker(settings))
     background.add_task(_run_analysis, pipeline, record, datasets.read_csv(request.dataset_id), info.profile, parent)
     return record
 
@@ -138,9 +187,18 @@ def get_report(analysis_id: UUID, analyses: AnalysisStoreDep) -> Response:
     )
 
 
-@router.post("/containment-tests", dependencies=[AccessDep])
-def containment_tests(executor: Annotated[ExecutorClient, Depends(create_executor)]) -> ContainmentReport:
+@router.post("/containment-tests")
+def containment_tests(
+    settings: SettingsDep,
+    visitor: VisitorDep,
+    executor: Annotated[ExecutorClient, Depends(create_executor)],
+) -> ContainmentReport:
     """Run fixed attack scripts in the real sandbox and report whether each was contained."""
+    try:
+        check_visitor(settings, visitor, "lab", settings.visitor_lab_runs_per_hour)
+    except HTTPException:
+        executor.close()
+        raise
     if not lab_slot.acquire(blocking=False):
         raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "The Containment Lab is already running.")
     try:

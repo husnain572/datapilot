@@ -382,7 +382,7 @@ def test_follow_up_questions_include_earlier_context(analyze):
 
 @pytest.fixture
 def api(tmp_path):
-    settings = Settings(_env_file=None, data_dir=tmp_path, access_code="demo-code")
+    settings = Settings(_env_file=None, data_dir=tmp_path, visitor_analyses_per_hour=2, visitor_lab_runs_per_hour=1)
     scripted = {"ai": ScriptedAI(draft(), insights()), "sandbox": ScriptedSandbox(run_of(RESULT_OK))}
     app.dependency_overrides[get_settings] = lambda: settings
     app.dependency_overrides[create_ai] = lambda: scripted["ai"].client()
@@ -391,7 +391,7 @@ def api(tmp_path):
     app.dependency_overrides.clear()
 
 
-CODE_HEADER = {"X-Access-Code": "demo-code"}
+CODE_HEADER = {"X-Visitor-Id": "203.0.113.7"}
 
 
 def upload(client) -> str:
@@ -422,17 +422,129 @@ def test_api_runs_an_analysis_and_serves_its_report(api):
     assert CODE in report.text
 
 
-@pytest.mark.parametrize("headers", [{}, {"X-Access-Code": "wrong"}], ids=["no-code", "wrong-code"])
-def test_analysis_and_lab_need_the_access_code(api, headers):
+def ask(client, dataset_id, visitor="203.0.113.7"):
+    return client.post(
+        "/api/v1/analyses", json={"dataset_id": dataset_id, "question": "Total?"}, headers={"X-Visitor-Id": visitor}
+    )
+
+
+def test_no_code_or_login_is_needed(api):
+    client, _ = api
+
+    response = client.post("/api/v1/analyses", json={"dataset_id": upload(client), "question": "Total?"})
+
+    assert response.status_code == 202
+
+
+def test_each_visitor_has_an_hourly_limit(api):
     client, scripted = api
+    scripted["ai"].answers = [draft(), insights()] * 3
+    scripted["sandbox"].runs = [run_of(RESULT_OK)] * 3
     dataset_id = upload(client)
 
-    analysis = client.post("/api/v1/analyses", json={"dataset_id": dataset_id, "question": "Total?"}, headers=headers)
-    lab = client.post("/api/v1/containment-tests", headers=headers)
+    assert ask(client, dataset_id).status_code == 202
+    assert ask(client, dataset_id).status_code == 202
+    blocked = ask(client, dataset_id)
 
-    assert analysis.status_code == 401
-    assert lab.status_code == 401
+    assert blocked.status_code == 429
+    assert "limit of 2 an hour" in blocked.json()["detail"]
+    assert ask(client, dataset_id, visitor="198.51.100.9").status_code == 202  # Someone else isn't affected.
+    assert len(scripted["ai"].requests) == 6  # The blocked request made no AI calls.
+
+
+def test_visitor_addresses_are_not_stored(api, tmp_path):
+    client, _ = api
+
+    ask(client, upload(client), visitor="203.0.113.99")
+
+    assert "203.0.113.99" not in (tmp_path / "visitor_usage.json").read_text()
+
+
+def test_lab_has_its_own_hourly_limit(api):
+    client, scripted = api
+    scripted["sandbox"].runs = [run_of(status="timeout")] * 20
+
+    assert client.post("/api/v1/containment-tests", headers=CODE_HEADER).status_code == 200
+    blocked = client.post("/api/v1/containment-tests", headers=CODE_HEADER)
+
+    assert blocked.status_code == 429
+
+
+def test_analysis_is_refused_when_the_daily_allowance_is_nearly_gone(api, tmp_path):
+    client, scripted = api
+    tracker = UsageTracker(tmp_path, 40)
+    for _ in range(38):
+        tracker.count_request()
+
+    response = ask(client, upload(client))
+
+    assert response.status_code == 429
+    assert "reset at midnight UTC" in response.json()["detail"]
     assert scripted["ai"].requests == []
+    assert client.get("/api/v1/usage").json()["analyses_left_today"] == 0
+
+
+def test_usage_shows_analyses_left_today(api):
+    client, _ = api
+
+    usage = client.get("/api/v1/usage").json()
+
+    assert usage["analyses_left_today"] == 13  # 40 requests, about 3 per analysis.
+    assert usage["resets_at"].endswith(("Z", "+00:00"))
+
+
+def test_saved_example_is_served_without_any_ai(api, monkeypatch, tmp_path):
+    import backend.storage.analyses as storage
+
+    client, scripted = api
+    example = analyze_example(tmp_path)
+    path = tmp_path / "example.json"
+    path.write_text(example.model_dump_json())
+    monkeypatch.setattr(storage, "EXAMPLE_FILE", path)
+
+    served = client.get("/api/v1/examples/sales")
+    by_id = client.get(f"/api/v1/analyses/{storage.EXAMPLE_ID}")
+    report = client.get(f"/api/v1/analyses/{storage.EXAMPLE_ID}/report")
+
+    assert served.status_code == by_id.status_code == report.status_code == 200
+    assert by_id.json()["result"]["metrics"][0]["value"] == 35
+    assert "Verified ✓" in report.text
+    assert scripted["ai"].requests == []
+
+
+def test_missing_example_gives_404(api, monkeypatch, tmp_path):
+    import backend.storage.analyses as storage
+
+    client, _ = api
+    monkeypatch.setattr(storage, "EXAMPLE_FILE", tmp_path / "missing.json")
+
+    assert client.get("/api/v1/examples/sales").status_code == 404
+
+
+def test_the_real_saved_example_is_valid_and_verified():
+    import backend.storage.analyses as storage
+
+    if not storage.EXAMPLE_FILE.exists():
+        pytest.skip("The example is created from a real run on the server.")
+    example = storage.load_example()
+
+    assert example is not None
+    assert example.analysis_id == storage.EXAMPLE_ID
+    assert example.status == "completed"
+    assert all(v.status != "mismatch" for v in example.verifications)
+
+
+def analyze_example(tmp_path) -> AnalysisRecord:
+    """A completed analysis, saved under the example's fixed ID."""
+    import backend.storage.analyses as storage
+
+    now = datetime.now(timezone.utc)
+    record = AnalysisRecord(analysis_id=storage.EXAMPLE_ID, dataset_id=uuid4(), question="Total revenue?", created_at=now, updated_at=now)
+    store = AnalysisStore(tmp_path / "example-run", 24)
+    AnalysisPipeline(
+        ScriptedAI(draft(), insights()).client(), ScriptedSandbox(run_of(RESULT_OK)), store, UsageTracker(tmp_path / "x", 40)
+    ).run(record, CSV, profile_dataframe(load_dataframe(CSV)), None)
+    return record
 
 
 def test_unknown_dataset_is_rejected(api):

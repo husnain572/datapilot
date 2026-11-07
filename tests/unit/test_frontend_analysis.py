@@ -81,19 +81,23 @@ class FakeBackend:
         self.record = record or COMPLETED
         self.status_code = status_code
         self.posts = []
+        self.detail = "The analysis couldn't start."
+        self.left_today = 5
 
     def get(self, url, **_kwargs):
         if url.endswith("/health"):
             return Mock(status_code=200, json=lambda: {"status": "ok"})
         if url.endswith("/report"):
             return Mock(status_code=200, text="# Report")
+        if url.endswith("/usage"):
+            return Mock(status_code=200, json=lambda: {"analyses_left_today": self.left_today})
         if url.endswith("/preview"):
             return Mock(status_code=200, json=lambda: {"total_rows": 2, "columns": ["a"], "rows": [{"a": 1}]})
         return Mock(status_code=200, json=lambda: self.record)
 
     def post(self, url, **kwargs):
         self.posts.append((url, kwargs))
-        return Mock(status_code=self.status_code, json=lambda: {"analysis_id": ANALYSIS_ID, "detail": "That access code isn't right."})
+        return Mock(status_code=self.status_code, json=lambda: {"analysis_id": ANALYSIS_ID, "detail": self.detail})
 
 
 @pytest.fixture
@@ -143,23 +147,62 @@ def test_links_and_images_from_the_ai_are_shown_as_plain_text(run_page):
     assert "&#33;&#91;x&#93;&#40;" in observation
 
 
-def test_the_access_code_is_sent_to_the_backend(run_page, monkeypatch):
+def test_no_access_code_is_asked_for(run_page):
     backend = FakeBackend()
+    page = run_page(backend)
+
+    assert not any("access code" in field.label.lower() for field in page.text_input)
+    assert backend.posts[0][1]["json"]["question"] == "Total revenue?"
+    assert "X-Visitor-Id" in backend.posts[0][1]["headers"]
+    assert "X-Access-Code" not in backend.posts[0][1]["headers"]
+
+
+def test_limit_message_from_the_backend_is_shown(run_page):
+    backend = FakeBackend(status_code=429)
+    backend.detail = "You've reached the limit of 4 an hour."
+
+    page = run_page(backend)
+
+    assert any("limit of 4 an hour" in item.value for item in page.error)
+    assert not any(metric.label == "Total revenue" for metric in page.metric)
+
+
+def test_analyses_left_today_is_shown(run_page):
+    page = run_page(FakeBackend(), analyze=False)
+
+    assert any("5 free analyses left today" in item.value for item in page.caption)
+
+
+def test_no_analyses_left_shows_a_clear_message(run_page):
+    backend = FakeBackend()
+    backend.left_today = 0
+
     page = run_page(backend, analyze=False)
 
-    page.text_input(key="access_code").input("my-code")
-    page.text_area(key="question").input("Total revenue?")
-    next(b for b in page.button if b.label == "Analyze").click().run()
-
-    assert backend.posts[0][1]["headers"]["X-Access-Code"] == "my-code"
-    assert backend.posts[0][1]["json"]["question"] == "Total revenue?"
+    assert any("have all been used" in item.value for item in page.info)
 
 
-def test_wrong_access_code_shows_the_message(run_page):
-    page = run_page(FakeBackend(status_code=401))
+def test_example_button_shows_the_saved_example(run_page):
+    backend = FakeBackend({**COMPLETED, "analysis_id": "00000000-0000-4000-8000-00000000da7a"})
+    page = run_page(backend, analyze=False)
 
-    assert any("access code" in item.value for item in page.error)
-    assert not any(metric.label == "Total revenue" for metric in page.metric)
+    next(b for b in page.button if b.label == "See an example analysis").click().run()
+
+    assert not page.exception
+    assert any("saved example" in item.value for item in page.info)
+    assert any(metric.value == "1,234.50" for metric in page.metric)
+    assert backend.posts == []  # No analysis was started, so no AI was used.
+
+
+def test_converted_files_show_where_they_came_from(run_page, monkeypatch):
+    backend = FakeBackend()
+    monkeypatch.setattr(httpx, "get", backend.get)
+    monkeypatch.setattr(httpx, "post", backend.post)
+    page = AppTest.from_file(APP_PATH, default_timeout=20)
+    page.session_state["dataset"] = {**DATASET, "source_format": "Excel", "source_note": "Sheet 'Sales'"}
+    page.run()
+
+    assert any("Converted from Excel" in item.value for item in page.caption)
 
 
 def test_empty_question_is_stopped_on_the_page(run_page):

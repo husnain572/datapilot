@@ -30,7 +30,14 @@ class DatasetStore:
         self.root = data_dir / "datasets"
         self.ttl = timedelta(hours=ttl_hours)
 
-    def save(self, filename: str, csv_text: str, profile: DatasetProfile) -> DatasetInfo:
+    def save(
+        self,
+        filename: str,
+        csv_text: str,
+        profile: DatasetProfile,
+        source_format: str = "CSV",
+        source_note: str | None = None,
+    ) -> DatasetInfo:
         dataset_id = uuid4()
         now = datetime.now(timezone.utc)
         data = csv_text.encode("utf-8")
@@ -40,6 +47,8 @@ class DatasetStore:
             size_bytes=len(data),
             created_at=now,
             expires_at=now + self.ttl,
+            source_format=source_format,
+            source_note=source_note,
             profile=profile,
         )
 

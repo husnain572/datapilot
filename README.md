@@ -2,9 +2,9 @@
 
 **Your Data Analyst. Your Code. Verifiable Results.**
 
-Upload a CSV and ask questions in plain English. DataPilot's AI writes the analysis code, Python runs it in a locked-down Docker sandbox, and the app shows only numbers it has checked.
+Upload a data file (CSV, Excel, JSON, Parquet, TSV, or TXT) and ask questions in plain English. DataPilot's AI writes the analysis code, Python runs it in a locked-down Docker sandbox, and the app shows only numbers it has checked.
 
-**Live demo:** http://66.42.63.156 (running an analysis needs the demo access code included with the hackathon submission)
+**Live demo:** http://66.42.63.156 (open to everyone, no login)
 
 ![DataPilot showing verified results, charts, and insights](docs/screenshots/results.png)
 
@@ -23,11 +23,10 @@ In testing, the AI's first attempt reported 48 missing cells when the real count
 
 ## Try it
 
-1. Open the live demo and click **Try the sample sales dataset**, or upload your own CSV.
-2. Enter the access code near the top of the page.
-3. Click **Use the sample question**, then **Analyze**.
-4. See the plan, code, logs, verified figures, interactive charts, insights, and downloads.
-5. Open the **Containment Lab** tab to watch the sandbox stop real attacks.
+1. Open the live demo and click **Try the sample sales dataset**, or upload your own file. To see results instantly, click **See an example analysis**.
+2. Click **Use the sample question**, then **Analyze**.
+3. See the plan, code, logs, verified figures, interactive charts, insights, and downloads.
+4. Open the **Containment Lab** tab to watch the sandbox stop real attacks.
 
 ![Interactive charts and verified tables](docs/screenshots/charts.png)
 
@@ -76,15 +75,16 @@ Upload and profiling work locally. Running analyses also needs the executor and 
 ```bash
 uv run pytest                                   # the main test suite
 DATAPILOT_RUN_SANDBOX_TESTS=1 uv run pytest tests/sandbox   # real attacks; needs Docker and the sandbox image
-ACCESS_CODE=... uv run python scripts/e2e_demo.py <backend URL>   # demo question, checked independently
+uv run python scripts/e2e_demo.py <backend URL>   # demo question, checked independently
 ```
 
 Latest results are in [docs/BUILD_STATUS.md](docs/BUILD_STATUS.md).
 
 ## Known limits
 
-- **Free AI:** OpenRouter allows 50 free requests a day, and one analysis uses about 3. The app stops at 40 a day.
-- **No HTTPS:** the demo runs over plain HTTP on an IP address, so don't enter or upload anything sensitive.
+- **Free AI:** OpenRouter allows 50 free requests a day, and one analysis uses about 3. The app stops at 40 a day, and each visitor can run 4 analyses an hour. The page shows how many are left, and the saved example works even when none are.
+- **No HTTPS:** the demo runs over plain HTTP on an IP address, so don't upload anything sensitive.
+- **Excel:** only the first sheet of an .xlsx file is read. Older .xls files aren't supported.
 - **One sandbox layer:** containers share the server's kernel. See [SECURITY.md](SECURITY.md).
 - **Verified means recalculated:** it shows a number equals its stated formula, not that the formula was the right choice. That's why the formula and code are always shown.
 

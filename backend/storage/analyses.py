@@ -13,6 +13,17 @@ from backend.schemas.analysis import AnalysisRecord
 # Longer than any analysis can take, so a "running" analysis this old was cut off by a restart.
 STALE_AFTER = timedelta(minutes=15)
 
+# A saved, real analysis of the sample data. It's shown instantly and uses no AI requests.
+EXAMPLE_ID = UUID("00000000-0000-4000-8000-00000000da7a")
+EXAMPLE_FILE = Path(__file__).parents[2] / "sample_data" / "example_analysis.json"
+
+
+def load_example() -> AnalysisRecord | None:
+    try:
+        return AnalysisRecord.model_validate_json(EXAMPLE_FILE.read_text(encoding="utf-8"))
+    except (OSError, ValidationError):
+        return None
+
 
 class AnalysisStore:
     def __init__(self, data_dir: Path, ttl_hours: int) -> None:
@@ -28,6 +39,8 @@ class AnalysisStore:
         os.replace(temp, self._path(record.analysis_id))
 
     def get(self, analysis_id: UUID) -> AnalysisRecord | None:
+        if analysis_id == EXAMPLE_ID:
+            return load_example()
         try:
             record = AnalysisRecord.model_validate_json(self._path(analysis_id).read_text(encoding="utf-8"))
         except (OSError, ValidationError):

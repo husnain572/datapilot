@@ -18,6 +18,10 @@ BACKEND_URL = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000")
 DATASETS_URL = f"{BACKEND_URL}/api/v1/datasets"
 ANALYSES_URL = f"{BACKEND_URL}/api/v1/analyses"
 LAB_URL = f"{BACKEND_URL}/api/v1/containment-tests"
+USAGE_URL = f"{BACKEND_URL}/api/v1/usage"
+EXAMPLE_URL = f"{BACKEND_URL}/api/v1/examples/sales"
+EXAMPLE_ID = "00000000-0000-4000-8000-00000000da7a"
+UPLOAD_TYPES = ["csv", "xlsx", "json", "parquet", "tsv", "txt"]
 SAMPLE_CSV = Path(__file__).parents[1] / "sample_data" / "sales.csv"
 UPLOAD_TIMEOUT_SECONDS = 120
 LAB_TIMEOUT_SECONDS = 150
@@ -99,8 +103,30 @@ def error_detail(response: httpx.Response, fallback: str) -> str:
     return detail if isinstance(detail, str) else fallback
 
 
-def access_headers() -> dict[str, str]:
-    return {"X-Access-Code": st.session_state.get("access_code", "")}
+def visitor_headers() -> dict[str, str]:
+    """Tell the backend who's asking, so each visitor gets a fair share of the free AI allowance.
+    Nginx passes the visitor's network address in X-Real-IP."""
+    try:
+        headers = st.context.headers
+        address = headers.get("X-Real-Ip") or headers.get("X-Forwarded-For", "").split(",")[0].strip()
+        address = address or st.context.ip_address or ""
+    except Exception:  # noqa: BLE001 - there are no request details in some test runs.
+        address = ""
+    return {"X-Visitor-Id": address[:200] or "unknown"}
+
+
+def analyses_left_today() -> int | None:
+    try:
+        response = httpx.get(USAGE_URL, timeout=5)
+    except httpx.HTTPError:
+        return None
+    return response.json().get("analyses_left_today") if response.status_code == 200 else None
+
+
+def example_button(key: str) -> None:
+    """A saved, real analysis of the sample data. It appears instantly and uses no AI requests."""
+    if st.button("See an example analysis", key=key, help="A real, verified analysis of the sample data, saved earlier."):
+        st.session_state.viewing = EXAMPLE_ID
 
 
 def upload_dataset(filename: str, content: bytes) -> None:
@@ -108,7 +134,7 @@ def upload_dataset(filename: str, content: bytes) -> None:
     try:
         response = httpx.post(
             DATASETS_URL,
-            files={"file": (filename, content, "text/csv")},
+            files={"file": (filename, content, "application/octet-stream")},
             timeout=UPLOAD_TIMEOUT_SECONDS,
         )
     except httpx.HTTPError:
@@ -165,7 +191,11 @@ def show_landing() -> None:
 
 def show_upload_section() -> None:
     section("Start with your data")
-    uploaded = st.file_uploader("Upload a CSV file", type="csv")
+    uploaded = st.file_uploader(
+        "Upload a data file",
+        type=UPLOAD_TYPES,
+        help="CSV, Excel (.xlsx, first sheet), JSON, Parquet, TSV, or TXT. Up to 25 MB.",
+    )
 
     # Streamlit reruns this script on every click, so only send each file once.
     if uploaded is not None and uploaded.file_id != st.session_state.get("last_file_id"):
@@ -173,9 +203,12 @@ def show_upload_section() -> None:
         with st.spinner("Checking your file..."):
             upload_dataset(uploaded.name, uploaded.getvalue())
 
-    if st.button("Try the sample sales dataset"):
+    sample, example = st.columns([1, 3])
+    if sample.button("Try the sample sales dataset"):
         with st.spinner("Loading the sample..."):
             upload_dataset(SAMPLE_CSV.name, SAMPLE_CSV.read_bytes())
+    with example:
+        example_button("example-landing")
 
     # The page was drawn before the upload finished, so redraw it to show the dashboard.
     if st.session_state.get("dataset"):
@@ -223,6 +256,9 @@ def show_dataset(dataset: dict) -> None:
     header, action = st.columns([4, 1])
     with header:
         section(f"📄 {safe_html(dataset['filename'])}")
+        if dataset.get("source_format", "CSV") not in ("CSV", "TSV", "Text"):
+            note = dataset.get("source_note")
+            st.caption(f"Converted from {plain(dataset['source_format'])}" + (f": {plain(note)}" if note else ""))
     action.button("Remove dataset", on_click=remove_dataset)
 
     rows, columns, missing, duplicates = st.columns(4)
@@ -254,7 +290,7 @@ def start_analysis(dataset_id: str, question: str, parent_id: str | None) -> str
     """Ask the backend to start. Returns the analysis ID, or shows why it couldn't."""
     body = {"dataset_id": dataset_id, "question": question, "parent_id": parent_id}
     try:
-        response = httpx.post(ANALYSES_URL, json=body, headers=access_headers(), timeout=30)
+        response = httpx.post(ANALYSES_URL, json=body, headers=visitor_headers(), timeout=30)
     except httpx.HTTPError:
         st.error("Couldn't reach the backend. Please try again.")
         return None
@@ -318,6 +354,14 @@ def show_question_box(dataset: dict) -> None:
         history = st.session_state.get("history", [])
         follow_up = st.checkbox("Follow up on my last question", value=bool(history), disabled=not history)
         submitted = st.form_submit_button("Analyze", type="primary")
+
+    left = analyses_left_today()
+    if left is not None:
+        if left > 0:
+            st.caption(f"{left} free analyses left today, shared by all visitors. Each takes about a minute.")
+        else:
+            st.info("Today's free analyses have all been used. They reset at midnight UTC. You can still see the example.")
+    example_button("example-question")
 
     if submitted:
         cleaned = question.strip()
@@ -545,6 +589,8 @@ def show_report_button(record: dict) -> None:
 def show_analysis(record: dict) -> None:
     st.divider()
     section("Analysis")
+    if str(record["analysis_id"]) == EXAMPLE_ID:
+        st.info("This is a saved example: a real, verified analysis of the sample sales dataset.")
     st.markdown(f"**Question:** {plain(record['question'])}")
 
     if record["status"] == "refused":
@@ -589,7 +635,7 @@ def show_containment_lab() -> None:
     if st.button("Run the attacks", type="primary"):
         with st.spinner("Attacking the sandbox..."):
             try:
-                response = httpx.post(LAB_URL, headers=access_headers(), timeout=LAB_TIMEOUT_SECONDS)
+                response = httpx.post(LAB_URL, headers=visitor_headers(), timeout=LAB_TIMEOUT_SECONDS)
             except httpx.HTTPError:
                 st.error("The Containment Lab couldn't finish. Please try again.")
                 return
@@ -620,16 +666,6 @@ def show_containment_lab() -> None:
     show_html(f'<div class="dp-grid">{"".join(cards)}</div>')
 
 
-def show_access_code() -> None:
-    field, note = st.columns([1, 2])
-    field.text_input("Demo access code", type="password", key="access_code", placeholder="Enter the code")
-    with note:
-        show_html(
-            '<div class="dp-step-note" style="padding-top:30px">Needed to run analyses and the Containment Lab, '
-            "so the free AI allowance can't be used up by strangers.</div>"
-        )
-
-
 def show_sidebar() -> None:
     history = st.session_state.get("history", [])
     if not history:
@@ -651,7 +687,6 @@ show_hero(healthy)
 
 if healthy:
     show_sidebar()
-    show_access_code()
     analyze_tab, lab_tab = st.tabs(["Analyze data", "Containment Lab"])
     with analyze_tab:
         if st.session_state.get("dataset"):
@@ -667,6 +702,12 @@ if healthy:
         else:
             show_landing()
             show_upload_section()
+            if st.session_state.get("viewing") == EXAMPLE_ID:
+                example = load_analysis(EXAMPLE_ID)
+                if example:
+                    show_analysis(example)
+                else:
+                    st.warning("The example isn't available right now.")
     with lab_tab:
         show_containment_lab()
 else:
