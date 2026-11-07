@@ -727,7 +727,7 @@ def show_summary(record: dict) -> None:
     elif verified:
         show_html(
             f'<div class="dp-verify-summary">{verified} of {len(checks)} figures were recalculated independently '
-            "and match. Hover over a figure's label to see how it was checked.</div>"
+            "and match. Hover over \"Verified\" to see how each one was checked.</div>"
         )
 
 
