@@ -20,6 +20,11 @@ class Settings(BaseSettings):
     max_columns: int = 200
     dataset_ttl_hours: int = 24
 
+    # Which kind of primary provider to use:
+    # "openai_compatible": any Chat Completions API, set with the AI_* settings below (Groq, free).
+    # "openai": OpenAI's official SDK and Responses API, set with the OPENAI_* settings (paid).
+    ai_provider: Literal["openai_compatible", "openai"] = "openai_compatible"
+
     # --- Primary AI provider: Groq's free tier (https://console.groq.com/docs) ---
     # SecretStr hides the key if settings are ever printed or logged.
     ai_api_key: SecretStr | None = None
@@ -40,6 +45,16 @@ class Settings(BaseSettings):
     # Groq's free tier for this model: about 1,000 requests and 200,000 tokens a day.
     ai_daily_request_limit: int = Field(default=900, ge=0)
     ai_daily_token_limit: int = Field(default=180_000, ge=0)
+
+    # --- OpenAI (used when AI_PROVIDER=openai). This is a paid API. ---
+    openai_api_key: SecretStr | None = None
+    # Required when using OpenAI, for example gpt-6-luna (cheapest) or gpt-6-astra (flagship).
+    openai_model: str | None = None
+    openai_reasoning_effort: str | None = None
+    openai_max_output_tokens: int = Field(default=8192, ge=1)
+    # Caps on daily use, which also cap daily spending. Set a spending limit in OpenAI too.
+    openai_daily_request_limit: int = Field(default=150, ge=0)
+    openai_daily_token_limit: int = Field(default=300_000, ge=0)
 
     # --- Optional fallback provider: Google Gemini, used only when a key is set ---
     ai_fallback_api_key: SecretStr | None = None
@@ -69,7 +84,7 @@ class Settings(BaseSettings):
             raise ValueError("AI_BASE_URL and AI_FALLBACK_BASE_URL must start with https://")
         return value
 
-    @field_validator("ai_reasoning_effort", "ai_fallback_reasoning_effort", mode="before")
+    @field_validator("ai_reasoning_effort", "ai_fallback_reasoning_effort", "openai_reasoning_effort", "openai_model", mode="before")
     @classmethod
     def blank_means_none(cls, value: object) -> object:
         return None if value == "" else value

@@ -42,6 +42,7 @@ To change the executor token, change it in `.env`, then re-run the deployment sc
 Keys go only in the backend's `.env`. The frontend reads `frontend.env`, which holds just `BACKEND_URL`; the deployment script creates it.
 
 - **Groq (required):** create a key at https://console.groq.com/keys and put it on the `AI_API_KEY=` line.
+- **OpenAI (optional, paid):** set `AI_PROVIDER=openai`, `OPENAI_API_KEY` and `OPENAI_MODEL`. Set a monthly spending limit in OpenAI's dashboard as well as DataPilot's daily caps.
 - **Gemini (optional fallback):** create a key in Google AI Studio and put it on the `AI_FALLBACK_API_KEY=` line.
 
 To replace a key, delete the old one at the provider, then edit the file:

@@ -68,7 +68,7 @@ class FakeProvider:
 
 
 def spec(name, requests=100, tokens=100_000) -> ProviderSpec:
-    return ProviderSpec(name, SecretStr("k"), "https://ai.test/v1", "m", "schema", None, requests, tokens)
+    return ProviderSpec(name, "openai_compatible", SecretStr("k"), "https://ai.test/v1", "m", "schema", None, requests, tokens)
 
 
 def make_router(tmp_path, primary: FakeProvider, fallback: FakeProvider | None = None, **limits):

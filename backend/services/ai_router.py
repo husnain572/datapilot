@@ -1,6 +1,7 @@
 """Chooses which AI provider answers each request, within each provider's free allowance.
 
-Groq is tried first. If it's rate-limited, out of its daily quota, or unavailable, and a
+The primary provider (Groq by default, or OpenAI when AI_PROVIDER=openai) is tried first.
+If it's rate-limited, out of its daily quota, or unavailable, and a
 fallback (Google Gemini) is configured, the request goes there instead. A reply that arrives
 but can't be used is not passed to the fallback: the analysis workflow handles it as a failed
 attempt, the same way as before.
@@ -25,6 +26,7 @@ from backend.services.inference import (
     InferenceTimeoutError,
     InferenceUnavailableError,
 )
+from backend.services.openai_provider import OpenAIResponsesClient
 from backend.services.usage import REQUESTS_PER_ANALYSIS, DailyLimitReached, UsageTracker
 
 logger = logging.getLogger(__name__)
@@ -39,6 +41,7 @@ class ProviderSpec:
     """One provider's settings. The key stays a SecretStr so it's never printed."""
 
     name: str
+    kind: str  # "openai_compatible" or "openai"
     api_key: SecretStr
     base_url: str
     model: str
@@ -55,10 +58,28 @@ def _has_key(key: SecretStr | None) -> bool:
 def provider_specs(settings: Settings) -> list[ProviderSpec]:
     """The configured providers, in the order they're tried."""
     specs = []
-    if _has_key(settings.ai_api_key):
+    if settings.ai_provider == "openai":
+        if _has_key(settings.openai_api_key):
+            if not settings.openai_model:
+                raise InferenceNotConfiguredError("OPENAI_MODEL is not set. Add it to the backend's .env file.")
+            specs.append(
+                ProviderSpec(
+                    name="primary",
+                    kind="openai",
+                    api_key=SecretStr(settings.openai_api_key.get_secret_value().strip()),
+                    base_url="https://api.openai.com/v1",
+                    model=settings.openai_model,
+                    structured_mode="schema",
+                    reasoning_effort=settings.openai_reasoning_effort,
+                    daily_requests=settings.openai_daily_request_limit,
+                    daily_tokens=settings.openai_daily_token_limit,
+                )
+            )
+    elif _has_key(settings.ai_api_key):
         specs.append(
             ProviderSpec(
                 name="primary",
+                kind="openai_compatible",
                 api_key=SecretStr(settings.ai_api_key.get_secret_value().strip()),
                 base_url=settings.ai_base_url,
                 model=settings.ai_model,
@@ -72,6 +93,7 @@ def provider_specs(settings: Settings) -> list[ProviderSpec]:
         specs.append(
             ProviderSpec(
                 name="fallback",
+                kind="openai_compatible",
                 api_key=SecretStr(settings.ai_fallback_api_key.get_secret_value().strip()),
                 base_url=settings.ai_fallback_base_url,
                 model=settings.ai_fallback_model,
@@ -98,7 +120,8 @@ def analyses_left_today(settings: Settings, usage: UsageTracker) -> int:
 @dataclass
 class Provider:
     spec: ProviderSpec
-    client: InferenceClient
+    # Any client with chat_structured(), last_usage, and close().
+    client: InferenceClient | OpenAIResponsesClient
 
     def has_allowance(self, usage: UsageTracker) -> bool:
         requests, tokens = usage.used(self.spec.name)
@@ -146,24 +169,33 @@ class AIRouter:
         raise DailyLimitReached("Today's free AI allowance has been used up. It resets at midnight UTC.")
 
 
+def create_client(spec: ProviderSpec, settings: Settings) -> InferenceClient | OpenAIResponsesClient:
+    """Build the right client for a provider's kind."""
+    if spec.kind == "openai":
+        return OpenAIResponsesClient(
+            spec.api_key,
+            spec.model,
+            timeout_seconds=settings.ai_timeout_seconds,
+            max_attempts=settings.ai_max_attempts,
+            max_output_tokens=settings.openai_max_output_tokens,
+            reasoning_effort=spec.reasoning_effort,
+        )
+    return InferenceClient(
+        spec.api_key,
+        spec.base_url,
+        spec.model,
+        timeout_seconds=settings.ai_timeout_seconds,
+        max_attempts=settings.ai_max_attempts,
+        max_completion_tokens=settings.ai_max_completion_tokens,
+        structured_mode=spec.structured_mode,
+        reasoning_effort=spec.reasoning_effort,
+    )
+
+
 def create_ai_router(settings: Settings, usage: UsageTracker) -> AIRouter:
     """Build clients for every configured provider."""
-    providers = [
-        Provider(
-            spec,
-            InferenceClient(
-                spec.api_key,
-                spec.base_url,
-                spec.model,
-                timeout_seconds=settings.ai_timeout_seconds,
-                max_attempts=settings.ai_max_attempts,
-                max_completion_tokens=settings.ai_max_completion_tokens,
-                structured_mode=spec.structured_mode,
-                reasoning_effort=spec.reasoning_effort,
-            ),
-        )
-        for spec in provider_specs(settings)
-    ]
+    providers = [Provider(spec, create_client(spec, settings)) for spec in provider_specs(settings)]
     if not providers:
-        raise InferenceNotConfiguredError("AI_API_KEY is not set. Add it to the backend's .env file.")
+        key = "OPENAI_API_KEY" if settings.ai_provider == "openai" else "AI_API_KEY"
+        raise InferenceNotConfiguredError(f"{key} is not set. Add it to the backend's .env file.")
     return AIRouter(providers, usage)

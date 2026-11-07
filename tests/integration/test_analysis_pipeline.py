@@ -109,7 +109,7 @@ class ScriptedSandbox:
 
 def router(client: InferenceClient, data_dir, daily_requests=40, daily_tokens=10**9) -> AIRouter:
     """One scripted provider, with its own daily allowance."""
-    spec = ProviderSpec("primary", SecretStr("fake"), "https://ai.test/v1", "m", "schema", None, daily_requests, daily_tokens)
+    spec = ProviderSpec("primary", "openai_compatible", SecretStr("fake"), "https://ai.test/v1", "m", "schema", None, daily_requests, daily_tokens)
     return AIRouter([Provider(spec, client)], UsageTracker(data_dir))
 
 

@@ -2,6 +2,14 @@
 
 **Last updated:** Nov 7, 2026
 
+## In progress: OpenAI provider (branch `openai-provider`, built on `groq-provider`, not deployed)
+
+- **Provider:** OpenAI's official Python SDK (`openai` 3.46.0) and Responses API, with strict JSON schemas. Turned on with `AI_PROVIDER=openai`, `OPENAI_API_KEY`, and `OPENAI_MODEL`.
+- **Errors:** OpenAI's errors map to DataPilot's error types. Rate limits, outages, timeouts, and billing or quota errors can fall back to Gemini if it's set up.
+- **Spending:** OpenAI has its own daily request and token caps (150 requests and 300,000 tokens).
+- **Default:** unchanged. OpenAI is paid, so it isn't the default.
+- **Tests:** 28 mocked tests, using the real SDK with fake HTTP replies. No real OpenAI call has been made.
+
 ## In progress: Groq instead of OpenRouter (branch `groq-provider`, not deployed)
 
 - **Providers:** Groq's free tier (`openai/gpt-oss-120b`) is the primary provider, and Google Gemini (`gemini-3.8-flash`) is an optional fallback, used only when its key is set.

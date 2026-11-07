@@ -51,7 +51,7 @@ Docker doesn't guarantee complete security. These risks remain:
 4. **Wrong analysis logic.** Validation can show that a calculation was performed correctly. It can't prove it was the right calculation for the question, so we show the code and the assumptions.
 5. **No HTTPS.** The demo uses plain HTTP on an IP address, so uploaded data isn't encrypted in transit.
 6. **Open access.** There's no login, so a determined person could use up the day's free AI allowance, for example from many network addresses. Visitors would then see the saved example and a message to try tomorrow. Spreadsheet and Parquet parsing also run in the backend process, not the sandbox, so a bug in those libraries is a risk.
-7. **Free AI providers.** Prompts go to Groq, and to Google if the Gemini fallback is turned on. Check each provider's terms for how free-tier data is used. We send column details, statistics, and small samples, never a whole dataset, but those samples can include real values. Don't upload sensitive data.
+7. **AI providers.** Prompts go to Groq, to OpenAI if `AI_PROVIDER=openai`, and to Google if the Gemini fallback is turned on. Check each provider's terms for how free-tier data is used. We send column details, statistics, and small samples, never a whole dataset, but those samples can include real values. Don't upload sensitive data.
 8. **Public demo abuse.** Limits reduce abuse but won't stop a determined attacker. Don't upload sensitive data to the demo.
 
 Checks on generated code are only an early warning and can be bypassed. The sandbox is the real boundary.

@@ -51,7 +51,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [SECURITY.md](SECURITY.md).
 | Vultr Cloud Compute | Hosts the frontend, backend, executor, and Docker sandboxes on one Ubuntu 24.04 server (2 vCPU, 4 GB RAM) |
 | Vultr Serverless Inference | Supported by changing settings, but **not used in the live demo** |
 
-AI runs on [Groq's](https://console.groq.com) free tier with the `openai/gpt-oss-120b` model, at no cost. [Google Gemini](https://aistudio.google.com) can be added as an optional free fallback, used only when Groq is busy or out of its daily quota. Any OpenAI-compatible provider works by changing settings, including Vultr Serverless Inference (`AI_BASE_URL=https://api.vultrinference.com/v1`, `AI_STRUCTURED_MODE=schema`). That path has been tested only with simulated replies.
+AI runs on [Groq's](https://console.groq.com) free tier with the `openai/gpt-oss-120b` model, at no cost. [Google Gemini](https://aistudio.google.com) can be added as an optional free fallback, used only when Groq is busy or out of its daily quota. OpenAI is also supported through its official SDK and Responses API (`AI_PROVIDER=openai`, `OPENAI_API_KEY`, `OPENAI_MODEL`). It's paid, so it has its own daily caps. Any OpenAI-compatible provider also works by changing settings, including Vultr Serverless Inference (`AI_BASE_URL=https://api.vultrinference.com/v1`, `AI_STRUCTURED_MODE=schema`). That path has been tested only with simulated replies.
 
 ## Run it locally
 

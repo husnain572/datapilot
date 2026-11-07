@@ -15,8 +15,9 @@ sys.path.insert(0, str(Path(__file__).parents[1]))
 
 from backend.config import get_settings  # noqa: E402
 from backend.schemas.inference import ChatMessage  # noqa: E402
-from backend.services.ai_router import provider_specs  # noqa: E402
+from backend.services.ai_router import create_client, provider_specs  # noqa: E402
 from backend.services.inference import InferenceClient, InferenceError  # noqa: E402
+from backend.services.openai_provider import OpenAIResponsesClient  # noqa: E402
 
 
 class ConnectionCheck(BaseModel):
@@ -53,14 +54,37 @@ def check(name: str, client: InferenceClient) -> bool:
         return False
 
 
+def check_openai(name: str, client: OpenAIResponsesClient) -> bool:
+    print(f"\n[{name}] OpenAI Responses API, model: {client.model}")
+    try:
+        structured = client.chat_structured(
+            [ChatMessage(role="user", content='Return JSON with the field "status" set to "ok".')],
+            ConnectionCheck,
+            max_completion_tokens=2000,
+        )
+        print(f"Structured output: OK, validated as {structured.model_dump()}, {client.last_usage.total_tokens} tokens")
+        return True
+    except InferenceError as error:
+        print(f"FAILED ({type(error).__name__}): {error}")
+        return False
+
+
 def main() -> int:
     settings = get_settings()
-    specs = provider_specs(settings)
+    try:
+        specs = provider_specs(settings)
+    except InferenceError as error:
+        print(f"FAILED: {error}")
+        return 1
     if not specs:
-        print("FAILED: AI_API_KEY is not set. Add your Groq key to the .env file.")
+        print("FAILED: no AI provider key is set in the .env file.")
         return 1
     results = []
     for spec in specs:
+        if spec.kind == "openai":
+            with create_client(spec, settings) as client:
+                results.append(check_openai(spec.name, client))
+            continue
         with InferenceClient(
             spec.api_key,
             spec.base_url,
