@@ -1,6 +1,21 @@
 # DataPilot build status
 
-**Last updated:** Nov 5, 2026
+**Last updated:** Nov 7, 2026
+
+## Latest changes (Nov 7, 2026)
+
+- **Open access:** no access code. There are hourly limits for each visitor, a shared daily AI limit, an "analyses left today" counter, and a saved example analysis that uses no AI.
+- **More file types:** CSV, Excel (.xlsx, first sheet), JSON, Parquet, TSV, and TXT. Every format is converted to CSV and given the same checks. Excel files are checked for zip bombs and parsed with XML attacks blocked.
+- **Redesign:** a sidebar with Dashboard, Upload data, Ask AI, and Containment Lab pages, and a new logo and favicon.
+- **Dashboard charts:** trend over time, top categories, value distributions, and missing values, calculated directly from the data with pandas (no AI).
+- **Analysis charts:** shown directly in the results, with suggested questions based on the dataset's columns.
+
+**Tested:**
+- Main test suite: 329 passed (the 19 Docker attack tests run on the server).
+- In real Chrome on http://66.42.63.156: no access code needed, an Excel upload converted and charted, the example analysis, and the Containment Lab (all contained), with 0 JavaScript errors.
+- Production run with no access code: demo question completed, and all 4 independent checks passed.
+
+**Server:** it went offline on Nov 7 and was restored by the owner, and all services restarted on their own. Its `.env` still has an unused `ACCESS_CODE` line, which does nothing.
 
 The interface was redesigned after the results below, with a custom theme, cards, tabs, and a progress tracker. It was re-tested in real Chrome, with the demo question (65 seconds) and the Containment Lab (all 7 contained), with 0 page exceptions. Main test suite: 278 passed, 19 skipped (the skipped ones are the Docker attack tests, which run on the server).
 

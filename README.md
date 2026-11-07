@@ -6,7 +6,7 @@ Upload a data file (CSV, Excel, JSON, Parquet, TSV, or TXT) and ask questions in
 
 **Live demo:** http://66.42.63.156 (open to everyone, no login)
 
-![DataPilot showing verified results, charts, and insights](docs/screenshots/results.png)
+![The dataset dashboard with charts calculated from the data](docs/screenshots/dashboard.png)
 
 ## The problem
 
@@ -29,7 +29,7 @@ In testing, the AI's first attempt reported 48 missing cells when the real count
 4. See the plan, code, logs, verified figures, interactive charts, insights, and downloads.
 5. Open **Containment Lab** to watch the sandbox stop real attacks.
 
-![Interactive charts and verified tables](docs/screenshots/charts.png)
+![Verified results, charts, and recommendations](docs/screenshots/results.png)
 
 ![The Containment Lab showing contained attacks](docs/screenshots/containment-lab.png)
 
