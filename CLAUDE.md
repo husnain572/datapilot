@@ -15,7 +15,7 @@ AI plans, writes code, and explains. Python calculates. **The AI must never supp
 - Production is on the Vultr server. Update it with `scripts/deploy_server.sh` (see `docs/DEPLOYMENT.md`). Never overwrite its `.env` or delete uploaded datasets.
 - Only the executor may access the Docker socket. Never give it to the backend or the sandbox.
 - Keep secrets out of the sandbox, logs, Git, and the Streamlit frontend. Never ask for API keys in chat. The owner enters them in `.env`.
-- The owner can't pay anything, so runtime AI uses Groq's free tier, with Google Gemini as an optional fallback (the owner's decision, Nov 7, 2026). OpenAI (official SDK, Responses API) is supported with `AI_PROVIDER=openai`, but it's paid, so it isn't the default. Don't change providers without asking. Check model IDs against the providers' official docs.
+- Runtime AI uses OpenAI's Responses API (`gpt-5.6-luna`) with the owner's paid key, capped daily (the owner's decision, Nov 7, 2026). Groq's free tier and a Gemini fallback remain available by settings. Don't change providers or raise the caps without asking. Check model IDs against the providers' official docs.
 - Challenge 1 requires Vultr Serverless Inference, so this choice affects which challenge the project can enter. See `docs/IMPLEMENTATION_PLAN.md`.
 - Send the AI only what it needs (column details, statistics, small samples), never a whole dataset. Free providers may keep prompts.
 - `~/.git` exists in the home folder. Run Git commands only inside this project. Don't delete `~/.git` without approval.

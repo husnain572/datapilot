@@ -1,24 +1,24 @@
 {
  "analysis_id": "00000000-0000-4000-8000-00000000da7a",
- "dataset_id": "42aa6e27-d0ce-47d2-b183-d3109fda65b1",
+ "dataset_id": "ef0e8673-5c99-4f34-b015-6d94f9ea98e3",
  "question": "Analyze sales performance. Calculate total revenue, identify the top five products by revenue, compare monthly revenue, detect missing values, and recommend three data-backed actions.",
  "parent_id": null,
  "status": "completed",
  "stage": "Finished",
- "created_at": "2026-11-07T13:19:18.867870Z",
- "updated_at": "2026-11-07T13:20:24.338826Z",
+ "created_at": "2026-11-07T14:24:28.114169Z",
+ "updated_at": "2026-11-07T14:25:31.029323Z",
  "plan": {
-  "goal": "Analyze sales performance: calculate total revenue, identify the top five products by revenue, compare monthly revenue, and detect missing values.",
+  "goal": "Analyze sales performance by calculating total revenue, ranking products by revenue, comparing revenue by month, quantifying missing and duplicate data, and producing outputs that support three data-backed actions.",
   "steps": [
    {
-    "description": "Create a revenue column as quantity times unit_price and compute total revenue.",
+    "description": "Create revenue as quantity multiplied by unit price and calculate total revenue.",
     "columns": [
      "quantity",
      "unit_price"
     ]
    },
    {
-    "description": "Group by product, sum revenue, and select the top five products.",
+    "description": "Aggregate revenue by non-missing product, identify the top five products, and calculate their combined revenue share.",
     "columns": [
      "product",
      "quantity",
@@ -26,7 +26,7 @@
     ]
    },
    {
-    "description": "Parse order_date, group by month, sum revenue, and sort chronologically.",
+    "description": "Parse order dates, aggregate revenue by calendar month, and calculate each month's revenue share.",
     "columns": [
      "order_date",
      "quantity",
@@ -34,7 +34,7 @@
     ]
    },
    {
-    "description": "Count missing values per column and total missing cells on the original dataset.",
+    "description": "Count missing values by column, total missing cells, and duplicate rows.",
     "columns": [
      "order_date",
      "product",
@@ -42,29 +42,40 @@
      "unit_price",
      "region"
     ]
+   },
+   {
+    "description": "Provide product and monthly tables and charts to support three data-backed actions based on concentration, seasonality, and data-quality findings.",
+    "columns": [
+     "product",
+     "order_date",
+     "quantity",
+     "unit_price",
+     "region"
+    ]
    }
   ],
   "assumptions": [
-   "Revenue equals quantity multiplied by unit_price; rows with missing quantity or unit_price produce a missing revenue that pandas skips when summing, so they add nothing to revenue.",
-   "Missing values are measured on the original dataset before the revenue column is added, so the revenue column's NaNs are not counted as missing cells.",
-   "Duplicate rows (13) are retained in calculations because the question does not ask to remove them."
+   "Revenue is calculated as quantity multiplied by unit_price; pandas skips rows where either input is missing when summing, so those rows add nothing to revenue.",
+   "Missing product and date values are retained in the source data and counted in data-quality outputs, but rows with missing product are excluded from the product grouping because they cannot be assigned to a named product.",
+   "All valid order_date values are grouped by calendar month using YYYY-MM labels.",
+   "Duplicate rows are retained in revenue calculations because the question does not request deduplication."
   ]
  },
- "code": "data = df.assign(revenue=df[\"quantity\"] * df[\"unit_price\"])\ntotal_revenue = data[\"revenue\"].sum()\nemit_metric(\"Total revenue\", total_revenue, check={\"op\": \"sum\", \"columns\": [\"quantity\", \"unit_price\"]})\ntop_products = (\n    data.groupby(\"product\", as_index=False)[\"revenue\"]\n    .sum()\n    .sort_values(\"revenue\", ascending=False)\n    .head(5)\n    .reset_index(drop=True)\n)\nemit_table(\"Top five products by revenue\", top_products, check={\"op\": \"sum\", \"columns\": [\"quantity\", \"unit_price\"], \"group_by\": \"product\", \"key_column\": \"product\", \"value_column\": \"revenue\"})\nemit_chart(\"Top five products by revenue\", \"bar\", top_products, x=\"product\", y=\"revenue\", title=\"Top five products by revenue\")\ndated = data.assign(order_date=pd.to_datetime(data[\"order_date\"], errors=\"coerce\"))\ndated = dated.assign(month=dated[\"order_date\"].dt.to_period(\"M\").astype(str))\nmonthly = (\n    dated.groupby(\"month\", as_index=False)[\"revenue\"]\n    .sum()\n    .sort_values(\"month\")\n    .reset_index(drop=True)\n)\nemit_table(\"Monthly revenue\", monthly, check={\"op\": \"sum\", \"columns\": [\"quantity\", \"unit_price\"], \"group_by\": \"order_date\", \"key_column\": \"month\", \"value_column\": \"revenue\", \"time_grain\": \"month\"})\nemit_chart(\"Monthly revenue\", \"line\", monthly, x=\"month\", y=\"revenue\", title=\"Monthly revenue\")\nmissing_per_column = df.isna().sum().reset_index()\nmissing_per_column.columns = [\"column\", \"missing_count\"]\nmissing_per_column = missing_per_column.sort_values(\"missing_count\", ascending=False).reset_index(drop=True)\nemit_table(\"Missing values by column\", missing_per_column)\ntotal_missing = int(df.isna().sum().sum())\nemit_metric(\"Total missing cells\", total_missing, check={\"op\": \"count_missing\"})",
+ "code": "data = df.assign(\n    revenue=df[\"quantity\"] * df[\"unit_price\"],\n    parsed_order_date=pd.to_datetime(df[\"order_date\"], errors=\"coerce\")\n)\n\nemit_metric(\n    \"Total revenue\",\n    data[\"revenue\"].sum(),\n    check={\"op\": \"sum\", \"columns\": [\"quantity\", \"unit_price\"]}\n)\n\n# Full product groups are calculated before selecting the top five, so the\n# independent check applies to complete groups rather than a truncated table.\nproduct_revenue_all = (\n    data.loc[data[\"product\"].notna()]\n    .groupby(\"product\", as_index=False)[\"revenue\"]\n    .sum()\n    .sort_values(\"revenue\", ascending=False)\n    .reset_index(drop=True)\n)\nemit_table(\n    \"Revenue by product\",\n    product_revenue_all,\n    check={\n        \"op\": \"sum\",\n        \"columns\": [\"quantity\", \"unit_price\"],\n        \"group_by\": \"product\",\n        \"key_column\": \"product\",\n        \"value_column\": \"revenue\"\n    }\n)\n\nproduct_revenue_top5 = product_revenue_all.head(5).reset_index(drop=True)\nemit_table(\"Top five products by revenue\", product_revenue_top5)\nemit_chart(\n    \"Top five products by revenue\",\n    \"bar\",\n    product_revenue_top5,\n    x=\"product\",\n    y=\"revenue\",\n    title=\"Top five products by revenue\"\n)\n\nproduct_top5_share = (\n    product_revenue_top5[\"revenue\"].sum() / data[\"revenue\"].sum()\n    if data[\"revenue\"].sum() != 0 else np.nan\n)\nemit_metric(\"Top five product revenue share\", product_top5_share)\n\nmonthly_data = data.assign(\n    month=data[\"parsed_order_date\"].dt.to_period(\"M\").astype(str)\n)\nmonthly_revenue = (\n    monthly_data.loc[monthly_data[\"parsed_order_date\"].notna()]\n    .groupby(\"month\", as_index=False)[\"revenue\"]\n    .sum()\n    .sort_values(\"month\")\n    .reset_index(drop=True)\n)\nmonthly_revenue[\"revenue_share\"] = (\n    monthly_revenue[\"revenue\"] / data[\"revenue\"].sum()\n    if data[\"revenue\"].sum() != 0 else np.nan\n)\nemit_table(\n    \"Monthly revenue\",\n    monthly_revenue,\n    check={\n        \"op\": \"sum\",\n        \"columns\": [\"quantity\", \"unit_price\"],\n        \"group_by\": \"order_date\",\n        \"key_column\": \"month\",\n        \"value_column\": \"revenue\",\n        \"time_grain\": \"month\"\n    }\n)\nemit_chart(\n    \"Monthly revenue comparison\",\n    \"line\",\n    monthly_revenue,\n    x=\"month\",\n    y=\"revenue\",\n    title=\"Monthly revenue comparison\"\n)\n\nfor column in [\"order_date\", \"product\", \"quantity\", \"unit_price\", \"region\"]:\n    emit_metric(\n        \"Missing values in \" + column,\n        df[column].isna().sum(),\n        check={\"op\": \"count_missing\", \"columns\": [column]}\n    )\n\nemit_metric(\n    \"Total missing cells\",\n    df.isna().sum().sum(),\n    check={\"op\": \"count_missing\"}\n)\nemit_metric(\n    \"Duplicate rows\",\n    df.duplicated().sum(),\n    check={\"op\": \"count_duplicates\"}\n)",
  "attempts": [
   {
    "attempt": 1,
    "outcome": "recalculation disagreed",
-   "code": "data = df.assign(revenue=df[\"quantity\"] * df[\"unit_price\"])\ntotal_revenue = data[\"revenue\"].sum()\nemit_metric(\"Total revenue\", total_revenue, check={\"op\": \"sum\", \"columns\": [\"quantity\", \"unit_price\"]})\ntop_products = (\n    data.groupby(\"product\", as_index=False)[\"revenue\"]\n    .sum()\n    .sort_values(\"revenue\", ascending=False)\n    .head(5)\n    .reset_index(drop=True)\n)\nemit_table(\"Top five products by revenue\", top_products, check={\"op\": \"sum\", \"columns\": [\"quantity\", \"unit_price\"], \"group_by\": \"product\", \"key_column\": \"product\", \"value_column\": \"revenue\"})\nemit_chart(\"Top five products by revenue\", \"bar\", top_products, x=\"product\", y=\"revenue\", title=\"Top five products by revenue\")\ndated = data.assign(order_date=pd.to_datetime(data[\"order_date\"], errors=\"coerce\"))\ndated = dated.assign(month=dated[\"order_date\"].dt.to_period(\"M\").astype(str))\nmonthly = (\n    dated.groupby(\"month\", as_index=False)[\"revenue\"]\n    .sum()\n    .sort_values(\"month\")\n    .reset_index(drop=True)\n)\nemit_table(\"Monthly revenue\", monthly, check={\"op\": \"sum\", \"columns\": [\"quantity\", \"unit_price\"], \"group_by\": \"order_date\", \"key_column\": \"month\", \"value_column\": \"revenue\", \"time_grain\": \"month\"})\nemit_chart(\"Monthly revenue\", \"line\", monthly, x=\"month\", y=\"revenue\", title=\"Monthly revenue\")\nmissing_per_column = data.isna().sum().reset_index()\nmissing_per_column.columns = [\"column\", \"missing_count\"]\nmissing_per_column = missing_per_column.sort_values(\"missing_count\", ascending=False).reset_index(drop=True)\nemit_table(\"Missing values by column\", missing_per_column)\nemit_metric(\"Total missing cells\", int(data.isna().sum().sum()), check={\"op\": \"count_missing\"})",
-   "duration_seconds": 4.572,
+   "code": "data = df.assign(\n    revenue=df[\"quantity\"] * df[\"unit_price\"],\n    parsed_order_date=pd.to_datetime(df[\"order_date\"], errors=\"coerce\")\n)\n\ntotal_revenue = data[\"revenue\"].sum()\nemit_metric(\n    \"Total revenue\",\n    total_revenue,\n    check={\"op\": \"sum\", \"columns\": [\"quantity\", \"unit_price\"]}\n)\n\nproduct_revenue = (\n    data.groupby(\"product\", dropna=False, as_index=False)[\"revenue\"]\n    .sum()\n    .sort_values(\"revenue\", ascending=False)\n    .head(5)\n    .reset_index(drop=True)\n)\nemit_table(\n    \"Top five products by revenue\",\n    product_revenue,\n    check={\n        \"op\": \"sum\",\n        \"columns\": [\"quantity\", \"unit_price\"],\n        \"group_by\": \"product\",\n        \"key_column\": \"product\",\n        \"value_column\": \"revenue\"\n    }\n)\nemit_chart(\n    \"Top five products by revenue\",\n    \"bar\",\n    product_revenue,\n    x=\"product\",\n    y=\"revenue\",\n    title=\"Top five products by revenue\"\n)\n\nmonthly_data = data.assign(\n    month=data[\"parsed_order_date\"].dt.to_period(\"M\").astype(str)\n)\nmonthly_revenue = (\n    monthly_data.groupby(\"month\", as_index=False)[\"revenue\"]\n    .sum()\n    .sort_values(\"month\")\n    .reset_index(drop=True)\n)\nemit_table(\n    \"Monthly revenue\",\n    monthly_revenue,\n    check={\n        \"op\": \"sum\",\n        \"columns\": [\"quantity\", \"unit_price\"],\n        \"group_by\": \"order_date\",\n        \"key_column\": \"month\",\n        \"value_column\": \"revenue\",\n        \"time_grain\": \"month\"\n    }\n)\nemit_chart(\n    \"Monthly revenue comparison\",\n    \"line\",\n    monthly_revenue,\n    x=\"month\",\n    y=\"revenue\",\n    title=\"Monthly revenue comparison\"\n)\n\nmonthly_share = monthly_revenue.assign(\n    revenue_share=monthly_revenue[\"revenue\"] / total_revenue\n)\nemit_table(\"Monthly revenue share\", monthly_share)\n\nregion_revenue = (\n    data.groupby(\"region\", dropna=False, as_index=False)[\"revenue\"]\n    .sum()\n    .sort_values(\"revenue\", ascending=False)\n    .reset_index(drop=True)\n)\nemit_table(\n    \"Revenue by region\",\n    region_revenue,\n    check={\n        \"op\": \"sum\",\n        \"columns\": [\"quantity\", \"unit_price\"],\n        \"group_by\": \"region\",\n        \"key_column\": \"region\",\n        \"value_column\": \"revenue\"\n    }\n)\nemit_chart(\n    \"Revenue by region\",\n    \"bar\",\n    region_revenue,\n    x=\"region\",\n    y=\"revenue\",\n    title=\"Revenue by region\"\n)\n\nfor column in [\"order_date\", \"product\", \"quantity\", \"unit_price\", \"region\"]:\n    emit_metric(\n        \"Missing values in \" + column,\n        df[column].isna().sum(),\n        check={\"op\": \"count_missing\", \"columns\": [column]}\n    )\n\nemit_metric(\n    \"Total missing cells\",\n    df.isna().sum().sum(),\n    check={\"op\": \"count_missing\"}\n)\nemit_metric(\n    \"Duplicate rows\",\n    df.duplicated().sum(),\n    check={\"op\": \"count_duplicates\"}\n)",
+   "duration_seconds": 3.5,
    "logs": "",
-   "problem": "Independent recalculation disagreed. Total missing cells [count_missing(all rows)]: Reported 48.0, but recalculated 30.0. Fix the calculation, or correct its check if the check doesn't describe it."
+   "problem": "Independent recalculation disagreed. Revenue by region [sum(quantity \u00d7 unit_price) for each region]: Row 5: 'None' isn't a group in the data. Fix the calculation, or correct its check if the check doesn't describe it."
   },
   {
    "attempt": 2,
    "outcome": "succeeded",
-   "code": "data = df.assign(revenue=df[\"quantity\"] * df[\"unit_price\"])\ntotal_revenue = data[\"revenue\"].sum()\nemit_metric(\"Total revenue\", total_revenue, check={\"op\": \"sum\", \"columns\": [\"quantity\", \"unit_price\"]})\ntop_products = (\n    data.groupby(\"product\", as_index=False)[\"revenue\"]\n    .sum()\n    .sort_values(\"revenue\", ascending=False)\n    .head(5)\n    .reset_index(drop=True)\n)\nemit_table(\"Top five products by revenue\", top_products, check={\"op\": \"sum\", \"columns\": [\"quantity\", \"unit_price\"], \"group_by\": \"product\", \"key_column\": \"product\", \"value_column\": \"revenue\"})\nemit_chart(\"Top five products by revenue\", \"bar\", top_products, x=\"product\", y=\"revenue\", title=\"Top five products by revenue\")\ndated = data.assign(order_date=pd.to_datetime(data[\"order_date\"], errors=\"coerce\"))\ndated = dated.assign(month=dated[\"order_date\"].dt.to_period(\"M\").astype(str))\nmonthly = (\n    dated.groupby(\"month\", as_index=False)[\"revenue\"]\n    .sum()\n    .sort_values(\"month\")\n    .reset_index(drop=True)\n)\nemit_table(\"Monthly revenue\", monthly, check={\"op\": \"sum\", \"columns\": [\"quantity\", \"unit_price\"], \"group_by\": \"order_date\", \"key_column\": \"month\", \"value_column\": \"revenue\", \"time_grain\": \"month\"})\nemit_chart(\"Monthly revenue\", \"line\", monthly, x=\"month\", y=\"revenue\", title=\"Monthly revenue\")\nmissing_per_column = df.isna().sum().reset_index()\nmissing_per_column.columns = [\"column\", \"missing_count\"]\nmissing_per_column = missing_per_column.sort_values(\"missing_count\", ascending=False).reset_index(drop=True)\nemit_table(\"Missing values by column\", missing_per_column)\ntotal_missing = int(df.isna().sum().sum())\nemit_metric(\"Total missing cells\", total_missing, check={\"op\": \"count_missing\"})",
-   "duration_seconds": 3.565,
+   "code": "data = df.assign(\n    revenue=df[\"quantity\"] * df[\"unit_price\"],\n    parsed_order_date=pd.to_datetime(df[\"order_date\"], errors=\"coerce\")\n)\n\nemit_metric(\n    \"Total revenue\",\n    data[\"revenue\"].sum(),\n    check={\"op\": \"sum\", \"columns\": [\"quantity\", \"unit_price\"]}\n)\n\n# Full product groups are calculated before selecting the top five, so the\n# independent check applies to complete groups rather than a truncated table.\nproduct_revenue_all = (\n    data.loc[data[\"product\"].notna()]\n    .groupby(\"product\", as_index=False)[\"revenue\"]\n    .sum()\n    .sort_values(\"revenue\", ascending=False)\n    .reset_index(drop=True)\n)\nemit_table(\n    \"Revenue by product\",\n    product_revenue_all,\n    check={\n        \"op\": \"sum\",\n        \"columns\": [\"quantity\", \"unit_price\"],\n        \"group_by\": \"product\",\n        \"key_column\": \"product\",\n        \"value_column\": \"revenue\"\n    }\n)\n\nproduct_revenue_top5 = product_revenue_all.head(5).reset_index(drop=True)\nemit_table(\"Top five products by revenue\", product_revenue_top5)\nemit_chart(\n    \"Top five products by revenue\",\n    \"bar\",\n    product_revenue_top5,\n    x=\"product\",\n    y=\"revenue\",\n    title=\"Top five products by revenue\"\n)\n\nproduct_top5_share = (\n    product_revenue_top5[\"revenue\"].sum() / data[\"revenue\"].sum()\n    if data[\"revenue\"].sum() != 0 else np.nan\n)\nemit_metric(\"Top five product revenue share\", product_top5_share)\n\nmonthly_data = data.assign(\n    month=data[\"parsed_order_date\"].dt.to_period(\"M\").astype(str)\n)\nmonthly_revenue = (\n    monthly_data.loc[monthly_data[\"parsed_order_date\"].notna()]\n    .groupby(\"month\", as_index=False)[\"revenue\"]\n    .sum()\n    .sort_values(\"month\")\n    .reset_index(drop=True)\n)\nmonthly_revenue[\"revenue_share\"] = (\n    monthly_revenue[\"revenue\"] / data[\"revenue\"].sum()\n    if data[\"revenue\"].sum() != 0 else np.nan\n)\nemit_table(\n    \"Monthly revenue\",\n    monthly_revenue,\n    check={\n        \"op\": \"sum\",\n        \"columns\": [\"quantity\", \"unit_price\"],\n        \"group_by\": \"order_date\",\n        \"key_column\": \"month\",\n        \"value_column\": \"revenue\",\n        \"time_grain\": \"month\"\n    }\n)\nemit_chart(\n    \"Monthly revenue comparison\",\n    \"line\",\n    monthly_revenue,\n    x=\"month\",\n    y=\"revenue\",\n    title=\"Monthly revenue comparison\"\n)\n\nfor column in [\"order_date\", \"product\", \"quantity\", \"unit_price\", \"region\"]:\n    emit_metric(\n        \"Missing values in \" + column,\n        df[column].isna().sum(),\n        check={\"op\": \"count_missing\", \"columns\": [column]}\n    )\n\nemit_metric(\n    \"Total missing cells\",\n    df.isna().sum().sum(),\n    check={\"op\": \"count_missing\"}\n)\nemit_metric(\n    \"Duplicate rows\",\n    df.duplicated().sum(),\n    check={\"op\": \"count_duplicates\"}\n)",
+   "duration_seconds": 3.759,
    "logs": "",
    "problem": null
   }
@@ -86,6 +97,72 @@
     }
    },
    {
+    "name": "Top five product revenue share",
+    "value": 0.7728434775636877,
+    "unit": null,
+    "check": null
+   },
+   {
+    "name": "Missing values in order_date",
+    "value": 0,
+    "unit": null,
+    "check": {
+     "op": "count_missing",
+     "columns": [
+      "order_date"
+     ],
+     "drop_duplicates": false
+    }
+   },
+   {
+    "name": "Missing values in product",
+    "value": 4,
+    "unit": null,
+    "check": {
+     "op": "count_missing",
+     "columns": [
+      "product"
+     ],
+     "drop_duplicates": false
+    }
+   },
+   {
+    "name": "Missing values in quantity",
+    "value": 11,
+    "unit": null,
+    "check": {
+     "op": "count_missing",
+     "columns": [
+      "quantity"
+     ],
+     "drop_duplicates": false
+    }
+   },
+   {
+    "name": "Missing values in unit_price",
+    "value": 7,
+    "unit": null,
+    "check": {
+     "op": "count_missing",
+     "columns": [
+      "unit_price"
+     ],
+     "drop_duplicates": false
+    }
+   },
+   {
+    "name": "Missing values in region",
+    "value": 8,
+    "unit": null,
+    "check": {
+     "op": "count_missing",
+     "columns": [
+      "region"
+     ],
+     "drop_duplicates": false
+    }
+   },
+   {
     "name": "Total missing cells",
     "value": 30,
     "unit": null,
@@ -94,9 +171,81 @@
      "columns": [],
      "drop_duplicates": false
     }
+   },
+   {
+    "name": "Duplicate rows",
+    "value": 13,
+    "unit": null,
+    "check": {
+     "op": "count_duplicates",
+     "columns": [],
+     "drop_duplicates": false
+    }
    }
   ],
   "tables": [
+   {
+    "name": "Revenue by product",
+    "columns": [
+     "product",
+     "revenue"
+    ],
+    "rows": [
+     [
+      "Laptop",
+      201196.2
+     ],
+     [
+      "Monitor",
+      101392.8
+     ],
+     [
+      "Standing Desk",
+      96482.1
+     ],
+     [
+      "Headset",
+      63599.549999999996
+     ],
+     [
+      "Office Chair",
+      58336.1
+     ],
+     [
+      "Docking Station",
+      45237.15
+     ],
+     [
+      "Keyboard",
+      39804.35
+     ],
+     [
+      "Webcam",
+      33689.55
+     ],
+     [
+      "Mouse",
+      18832.600000000002
+     ],
+     [
+      "USB-C Cable",
+      10224.75
+     ]
+    ],
+    "total_rows": 10,
+    "check": {
+     "op": "sum",
+     "columns": [
+      "quantity",
+      "unit_price"
+     ],
+     "drop_duplicates": false,
+     "group_by": "product",
+     "key_column": "product",
+     "value_column": "revenue",
+     "time_grain": null
+    }
+   },
    {
     "name": "Top five products by revenue",
     "columns": [
@@ -126,73 +275,75 @@
      ]
     ],
     "total_rows": 5,
-    "check": {
-     "op": "sum",
-     "columns": [
-      "quantity",
-      "unit_price"
-     ],
-     "drop_duplicates": false,
-     "group_by": "product",
-     "key_column": "product",
-     "value_column": "revenue",
-     "time_grain": null
-    }
+    "check": null
    },
    {
     "name": "Monthly revenue",
     "columns": [
      "month",
-     "revenue"
+     "revenue",
+     "revenue_share"
     ],
     "rows": [
      [
       "2025-01",
-      61437.5
+      61437.5,
+      0.09113427254602569
      ],
      [
       "2025-02",
-      34842.0
+      34842.0,
+      0.05168342338227673
      ],
      [
       "2025-03",
-      64319.85
+      64319.85,
+      0.09540985131262648
      ],
      [
       "2025-04",
-      38566.9
+      38566.9,
+      0.057208811814532134
      ],
      [
       "2025-05",
-      48232.8
+      48232.8,
+      0.07154687513095337
      ],
      [
       "2025-06",
-      54491.25
+      54491.25,
+      0.0808304444170681
      ],
      [
       "2025-07",
-      46975.25
+      46975.25,
+      0.06968146875145786
      ],
      [
       "2025-08",
-      77556.75
+      77556.75,
+      0.11504501309923056
      ],
      [
       "2025-09",
-      59968.45
+      59968.45,
+      0.08895513434730765
      ],
      [
       "2025-10",
-      49360.25
+      49360.25,
+      0.07321929564907367
      ],
      [
       "2025-11",
-      73143.2
+      73143.2,
+      0.10849810496339313
      ],
      [
       "2025-12",
-      65248.45
+      65248.45,
+      0.09678730458605458
      ]
     ],
     "total_rows": 12,
@@ -208,37 +359,6 @@
      "value_column": "revenue",
      "time_grain": "month"
     }
-   },
-   {
-    "name": "Missing values by column",
-    "columns": [
-     "column",
-     "missing_count"
-    ],
-    "rows": [
-     [
-      "quantity",
-      11
-     ],
-     [
-      "region",
-      8
-     ],
-     [
-      "unit_price",
-      7
-     ],
-     [
-      "product",
-      4
-     ],
-     [
-      "order_date",
-      0
-     ]
-    ],
-    "total_rows": 5,
-    "check": null
    }
   ],
   "charts": [
@@ -264,9 +384,9 @@
     ]
    },
    {
-    "name": "Monthly revenue",
+    "name": "Monthly revenue comparison",
     "kind": "line",
-    "title": "Monthly revenue",
+    "title": "Monthly revenue comparison",
     "x_label": "month",
     "y_label": "revenue",
     "x": [
@@ -309,6 +429,48 @@
    "detail": null
   },
   {
+   "target": "Top five product revenue share",
+   "target_type": "metric",
+   "status": "not_checked",
+   "formula": null,
+   "detail": null
+  },
+  {
+   "target": "Missing values in order_date",
+   "target_type": "metric",
+   "status": "verified",
+   "formula": "count_missing(order_date)",
+   "detail": null
+  },
+  {
+   "target": "Missing values in product",
+   "target_type": "metric",
+   "status": "verified",
+   "formula": "count_missing(product)",
+   "detail": null
+  },
+  {
+   "target": "Missing values in quantity",
+   "target_type": "metric",
+   "status": "verified",
+   "formula": "count_missing(quantity)",
+   "detail": null
+  },
+  {
+   "target": "Missing values in unit_price",
+   "target_type": "metric",
+   "status": "verified",
+   "formula": "count_missing(unit_price)",
+   "detail": null
+  },
+  {
+   "target": "Missing values in region",
+   "target_type": "metric",
+   "status": "verified",
+   "formula": "count_missing(region)",
+   "detail": null
+  },
+  {
    "target": "Total missing cells",
    "target_type": "metric",
    "status": "verified",
@@ -316,10 +478,24 @@
    "detail": null
   },
   {
-   "target": "Top five products by revenue",
+   "target": "Duplicate rows",
+   "target_type": "metric",
+   "status": "verified",
+   "formula": "count_duplicates(all rows)",
+   "detail": null
+  },
+  {
+   "target": "Revenue by product",
    "target_type": "table",
    "status": "verified",
    "formula": "sum(quantity \u00d7 unit_price) for each product",
+   "detail": null
+  },
+  {
+   "target": "Top five products by revenue",
+   "target_type": "table",
+   "status": "not_checked",
+   "formula": null,
    "detail": null
   },
   {
@@ -328,49 +504,33 @@
    "status": "verified",
    "formula": "sum(quantity \u00d7 unit_price) for each order_date by month",
    "detail": null
-  },
-  {
-   "target": "Missing values by column",
-   "target_type": "table",
-   "status": "not_checked",
-   "formula": null,
-   "detail": null
   }
  ],
  "insights": {
   "observations": [
-   "Total revenue was 674,142.65.",
-   "Laptop led product revenue at 201,196.20.",
-   "Monitor followed at 101,392.80.",
-   "Standing Desk earned 96,482.10.",
-   "Headset earned 63,599.55.",
-   "Office Chair earned 58,336.10.",
-   "August 2025 had the highest monthly revenue at 77,556.75.",
-   "February 2025 had the lowest monthly revenue at 34,842.00.",
-   "The dataset contained 30 missing cells.",
-   "Quantity had 11 missing values, the most of any column.",
-   "Region had 8 missing values.",
-   "Unit price had 7 missing values.",
-   "Product had 4 missing values.",
-   "Order date had no missing values."
+   "Total revenue was $674,142.65.",
+   "The top five products were Laptop ($201,196.20), Monitor ($101,392.80), Standing Desk ($96,482.10), Headset ($63,599.55), and Office Chair ($58,336.10). Together, they represented 77.3% of revenue.",
+   "August had the highest monthly revenue at $77,556.75, followed by November at $73,143.20. February had the lowest revenue at $34,842.00.",
+   "There were no missing order dates. Missing values occurred in product (4), quantity (11), unit price (7), and region (8), for 30 missing cells overall.",
+   "The dataset contained 13 duplicate rows."
   ],
   "assumptions": [
-   "All revenue figures use the same currency.",
-   "Missing cells may reduce the accuracy of product and monthly totals.",
-   "The top five products represent the highest recorded revenue values."
+   "Revenue figures are comparable across products and months.",
+   "The top-five product table is ranked by revenue.",
+   "Missing-value counts refer to individual cells, and duplicate rows are reported by the data-quality check."
   ],
   "recommendations": [
    {
-    "action": "Complete missing quantity entries",
-    "evidence": "Quantity had 11 missing cells, the highest count among columns."
+    "action": "Prioritize inventory and sales planning for the five leading products.",
+    "evidence": "The top five products generated 77.3% of revenue, led by Laptop at $201,196.20."
    },
    {
-    "action": "Investigate the February 2025 revenue decline",
-    "evidence": "February 2025 revenue was 34,842.00, the lowest monthly total."
+    "action": "Review the factors behind the August peak and February low, then test targeted monthly sales initiatives.",
+    "evidence": "Monthly revenue ranged from $34,842.00 in February to $77,556.75 in August."
    },
    {
-    "action": "Focus inventory and marketing on Laptop",
-    "evidence": "Laptop generated 201,196.20, the highest product revenue."
+    "action": "Clean and validate the dataset before using it for operational decisions.",
+    "evidence": "The data contains 30 missing cells and 13 duplicate rows, including 11 missing quantity values and 7 missing unit prices."
    }
   ]
  },

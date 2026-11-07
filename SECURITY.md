@@ -15,7 +15,7 @@ DataPilot runs code written by an AI model, on data uploaded by strangers. We tr
 
 | Layer | Control | Stops |
 |---|---|---|
-| Network | Firewall allows only ports 22 and 80. Nginx exposes only Streamlit. The backend and executor listen only on the server itself. | Direct attacks on internal services |
+| Network | Firewall allows only ports 22, 80, and 443. Port 80 only redirects to HTTPS. Nginx exposes only Streamlit. The backend and executor listen only on the server itself. | Direct attacks on internal services |
 | Application | Upload limits, input validation, one or two analyses at a time, a daily AI request limit, and hourly limits for each visitor (no login) | Bad files, abuse, using up the free AI allowance |
 | File formats | Every format is converted to CSV and given the same checks. Excel files are checked for zip bombs before loading, and parsed with XML attacks blocked (defusedxml). Parquet size is checked from its metadata first | Hostile spreadsheets and compressed files |
 | Executor | Separate service and user, the only one with Docker access. Token-protected, can't read `.env`, and applies fixed sandbox settings | A compromised backend or bad code choosing weaker settings |
@@ -49,7 +49,7 @@ Docker doesn't guarantee complete security. These risks remain:
 2. **Executor compromise.** The executor has Docker access, which amounts to root on the server. It's kept small, private, and token-protected. Its user can also read the app's folders except `.env`, including uploaded datasets.
 3. **Prompt injection.** Text in a CSV could try to manipulate the AI. Bad code would still run in the sandbox and its numbers would still be checked, but a misleading explanation is possible.
 4. **Wrong analysis logic.** Validation can show that a calculation was performed correctly. It can't prove it was the right calculation for the question, so we show the code and the assumptions.
-5. **No HTTPS.** The demo uses plain HTTP on an IP address, so uploaded data isn't encrypted in transit.
+5. **Shared server.** The website, backend, and sandboxes run on one small server. Traffic is encrypted with HTTPS (a free Let's Encrypt certificate that renews itself).
 6. **Open access.** There's no login, so a determined person could use up the day's free AI allowance, for example from many network addresses. Visitors would then see the saved example and a message to try tomorrow. Spreadsheet and Parquet parsing also run in the backend process, not the sandbox, so a bug in those libraries is a risk.
 7. **AI providers.** Prompts go to Groq, to OpenAI if `AI_PROVIDER=openai`, and to Google if the Gemini fallback is turned on. Check each provider's terms for how free-tier data is used. We send column details, statistics, and small samples, never a whole dataset, but those samples can include real values. Don't upload sensitive data.
 8. **Public demo abuse.** Limits reduce abuse but won't stop a determined attacker. Don't upload sensitive data to the demo.

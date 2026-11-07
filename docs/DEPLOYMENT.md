@@ -2,11 +2,17 @@
 
 These steps are for the Vultr server (Ubuntu 24.04), where the app runs from `/home/deploy/datapilot` as the `deploy` user.
 
+## Address and HTTPS
+
+The site is at **https://datapilot-husnain.duckdns.org**: a free DuckDNS name pointing to the server, with a free Let's Encrypt certificate. `certbot` renews it automatically; check with `systemctl list-timers | grep certbot`. Visits to http or the bare IP address are redirected to it.
+
+If the server's IP address ever changes, update it at https://www.duckdns.org.
+
 ## What runs where
 
 | Service | Listens on | User | Job |
 |---|---|---|---|
-| `nginx` | Port 80, public | www-data | Front door, passes visitors to Streamlit |
+| `nginx` | Ports 80 and 443, public (80 redirects to HTTPS) | www-data | Front door, passes visitors to Streamlit |
 | `datapilot-frontend` | 127.0.0.1:8501 | deploy | Screens |
 | `datapilot-backend` | 127.0.0.1:8000 | deploy | Agent, validation, reports |
 | `datapilot-executor` | 127.0.0.1:8100 | dp-executor | The only service that can start sandboxes |

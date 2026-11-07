@@ -2,6 +2,15 @@
 
 **Last updated:** Nov 7, 2026
 
+## Live now
+
+- **Address:** https://datapilot-husnain.duckdns.org, with HTTPS. The old IP address redirects there.
+- **AI:** OpenAI Responses API with `gpt-5.6-luna`. This key's project can only use `gpt-5.6-luna` and `gpt-4.1-mini`.
+- **Real production run:** the demo question completed in 64 seconds, using 3 requests and about 9,900 tokens. All 4 independent checks passed, and 10 of 12 results were verified by recalculation. The run became the saved example.
+- **Interface:** the menu is Upload data, Dashboard, and Ask AI, with Security as a small link at the bottom. Status and usage labels were removed.
+- **Keys:** the frontend process holds no AI keys (checked on the server).
+- **Tests:** 379 passed.
+
 ## In progress: OpenAI provider (branch `openai-provider`, built on `groq-provider`, not deployed)
 
 - **Provider:** OpenAI's official Python SDK (`openai` 3.46.0) and Responses API, with strict JSON schemas. Turned on with `AI_PROVIDER=openai`, `OPENAI_API_KEY`, and `OPENAI_MODEL`.

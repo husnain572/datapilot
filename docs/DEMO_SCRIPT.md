@@ -23,7 +23,7 @@ Ask questions of a CSV in plain English. DataPilot plans the analysis, runs gene
 | 1:30 | Key figures and verification labels | "Total revenue is 674,142.65. The green check means our backend recalculated it with separate code, and you can see the exact formula." |
 | 1:50 | **Execution log** tab | "If this run shows a repair, this is the system working: recalculation caught a wrong number, and the AI fixed its own code." |
 | 2:05 | **Insights** and **Charts and tables** tabs | "Interactive charts, findings kept separate from recommendations, and every number traced to a result. Patterns are never presented as proof of cause." |
-| 2:20 | **Containment Lab** tab, click **Run the attacks** | "Now let's attack it. Deleting files, an infinite loop, a fork bomb, a memory bomb, stealing secrets, sending data out." |
+| 2:20 | **Security** (bottom of the menu), click **Run the attacks** | "Now let's attack it. Deleting files, an infinite loop, a fork bomb, a memory bomb, stealing secrets, sending data out." |
 | 2:45 | Attack result cards | "All contained. The code does its worst, and the blast radius is one throwaway container." |
 | 2:55 | **Download the full report** | "And you can download everything, including the code. Your data analyst, your code, verifiable results." |
 
@@ -39,7 +39,7 @@ The first attempt doesn't always need a repair, so only mention the repair if th
 ## Submission checklist
 
 - [ ] Choose the challenge. Challenge 1 requires Vultr Serverless Inference, so enter Challenge 2 or get written approval from the organizers.
-- [ ] Replace the OpenRouter key.
+- [ ] Replace the OpenRouter key pasted earlier in chat, or delete it if it's no longer used.
 - [ ] Make the GitHub repository public.
 - [ ] Record and upload the video, including the containment moment.
 - [ ] Create the slides and cover image.

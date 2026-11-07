@@ -3,10 +3,10 @@
 ## Overview
 
 ```
-Browser ──HTTP──> Nginx ──> Streamlit (screens)
+Browser ──HTTPS──> Nginx ──> Streamlit (screens)
                                │ REST
                                ▼
-                    FastAPI backend ──HTTPS──> Groq (free), optional Gemini fallback
+                    FastAPI backend ──HTTPS──> OpenAI (or Groq), optional Gemini fallback
                   (agent, validation, reports)
                                │ private network + token
                                ▼
@@ -44,7 +44,7 @@ Browser ──HTTP──> Nginx ──> Streamlit (screens)
 
 | Decision | Why |
 |---|---|
-| Groq's free tier first, with Gemini as an optional fallback | The owner can't pay anything. A small router tries each provider in turn, within its daily request and token allowance. Vultr Serverless Inference works by changing settings. |
+| A modular AI provider: OpenAI (official SDK, Responses API) in production, with Groq and Gemini as options | A small router tries each provider in turn, within its daily request and token caps, so providers can be switched by settings. |
 | Plain Python workflow instead of LangGraph | The steps are fixed and retries are limited, so a simple loop is easier to read and debug |
 | Separate executor service | Docker access amounts to root on the server, so neither the backend nor the sandbox gets it |
 | Docker runs only on the Vultr VM | Current Docker Desktop doesn't support macOS 12, and generated code must never run on the owner's Mac |
@@ -68,6 +68,6 @@ Browser ──HTTP──> Nginx ──> Streamlit (screens)
 |---|---|---|
 | Streamlit, FastAPI, executor | Run directly with uv (no executor) | systemd services |
 | Sandbox | Not available, because Docker doesn't run on this Mac | Same VM, reached on the server's own loopback address |
-| Public access | Not needed | Nginx over HTTP on the server's IP (no HTTPS yet, because there's no domain) |
+| Public access | Not needed | Nginx with HTTPS at https://datapilot-husnain.duckdns.org (free DuckDNS name and Let's Encrypt certificate) |
 
 See [SECURITY.md](../SECURITY.md) for the security design and remaining risks.
