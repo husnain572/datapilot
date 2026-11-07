@@ -16,6 +16,8 @@ MAX_CATEGORY_COLUMNS = 6
 MAX_CATEGORY_LABELS = 10
 MAX_CATEGORY_UNIQUE = 100
 HISTOGRAM_BINS = 12
+# Whole-number columns with this many distinct values or fewer get one bar per value.
+MAX_DISCRETE_VALUES = 30
 ROW_COUNT = "Number of rows"
 
 
@@ -86,6 +88,13 @@ def build_dashboard(df: pd.DataFrame, profile: DatasetProfile) -> DatasetCharts:
     for name, values in numbers.items():
         finite = values[np.isfinite(values)].to_numpy(dtype=float)
         if finite.size == 0:
+            continue
+        distinct = np.unique(finite)
+        if np.all(distinct == np.round(distinct)) and distinct.size <= MAX_DISCRETE_VALUES:
+            # For example, quantities 1 to 8: one bar per value reads better than ranges.
+            values_counted = pd.Series(finite).value_counts().sort_index()
+            labels = [f"{value:g}" for value in values_counted.index]
+            histograms[name] = Histogram(labels=labels, counts=[int(count) for count in values_counted.to_numpy()])
             continue
         counts, edges = np.histogram(finite, bins=HISTOGRAM_BINS)
         labels = [f"{_short(edges[i])} – {_short(edges[i + 1])}" for i in range(len(counts))]

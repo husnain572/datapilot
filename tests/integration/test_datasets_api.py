@@ -231,6 +231,9 @@ def test_dashboard_charts_match_the_sample_data(client):
     by_quantity = charts["categories"]["product"]["Total quantity"]
     assert dict(zip(by_quantity["labels"], by_quantity["values"]))["Laptop"] == quantity_total
     assert sum(charts["histograms"]["quantity"]["counts"]) == sum(1 for row in rows if row["quantity"])
+    quantities = Counter(int(row["quantity"]) for row in rows if row["quantity"])
+    histogram = charts["histograms"]["quantity"]
+    assert dict(zip(histogram["labels"], histogram["counts"])) == {str(k): v for k, v in sorted(quantities.items())}
     assert dict(zip(charts["missing"]["labels"], charts["missing"]["values"]))["quantity"] == 11
 
 

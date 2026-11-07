@@ -601,7 +601,7 @@ def suggested_questions(profile: dict) -> list[str]:
     dated = any(c["kind"] == "datetime" for c in columns)
     questions = []
     if numeric and categories:
-        questions.append(f"Which {categories[0]} has the highest total {numeric[-1]}?")
+        questions.append(f"Which {categories[0]} has the highest total {numeric[0]}?")
     if numeric and dated:
         questions.append(f"How does total {numeric[0]} change by month?")
     if numeric:

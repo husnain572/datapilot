@@ -19,6 +19,8 @@ html, body, .stApp {
   justify-content: flex-start; border-radius: 12px; padding: 10px 14px; font-weight: 600; border: 1px solid transparent;
   background: transparent; color: #26324b; box-shadow: none;
 }
+[data-testid="stSidebar"] .stButton > button > div { justify-content: flex-start; width: 100%; }
+[data-testid="stSidebar"] .stButton > button p { text-align: left; }
 [data-testid="stSidebar"] .stButton > button:hover { background: #eef3ff; color: #2563eb; border-color: transparent; }
 [data-testid="stSidebar"] .stButton > button[kind="primary"],
 [data-testid="stSidebar"] [data-testid="stBaseButton-primary"] {

@@ -23,10 +23,11 @@ In testing, the AI's first attempt reported 48 missing cells when the real count
 
 ## Try it
 
-1. Open the live demo and click **Try the sample sales dataset**, or upload your own file. To see results instantly, click **See an example analysis**.
-2. Click **Use the sample question**, then **Analyze**.
-3. See the plan, code, logs, verified figures, interactive charts, insights, and downloads.
-4. Open the **Containment Lab** tab to watch the sandbox stop real attacks.
+1. Open the live demo. On **Upload data**, click **Try the sample sales dataset** or upload your own file. To see results instantly, click **See an example analysis**.
+2. The **Dashboard** shows charts of your data straight away: trend over time, top categories, value distributions, and missing values. These are calculated directly with pandas, without AI.
+3. On **Ask AI**, click **Use the sample question** or one of the suggested questions, then **Analyze**.
+4. See the plan, code, logs, verified figures, interactive charts, insights, and downloads.
+5. Open **Containment Lab** to watch the sandbox stop real attacks.
 
 ![Interactive charts and verified tables](docs/screenshots/charts.png)
 
