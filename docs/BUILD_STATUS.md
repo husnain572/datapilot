@@ -4,6 +4,8 @@
 
 ## Live now
 
+- **Speed (Nov 7, 2026, measured on production):** the demo question went from 63–65 s to **26 s**, passing on the first attempt, with verified figures showing at about 18 s. Asking the same question on identical data is answered instantly with no AI cost. What changed: lower reasoning effort (`low` for code, `none` for summaries), read-only uploaded data in the sandbox, early display of verified figures, reuse of identical answers, and skipping blank-group rows when recalculating tables.
+
 - **Address:** https://datapilot-husnain.duckdns.org, with HTTPS. The old IP address redirects there.
 - **AI:** OpenAI Responses API with `gpt-5.6-luna`. This key's project can only use `gpt-5.6-luna` and `gpt-4.1-mini`.
 - **Real production run:** the demo question completed in 64 seconds, using 3 requests and about 9,900 tokens. All 4 independent checks passed, and 10 of 12 results were verified by recalculation. The run became the saved example.
