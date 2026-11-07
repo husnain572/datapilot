@@ -83,7 +83,7 @@ Latest results are in [docs/BUILD_STATUS.md](docs/BUILD_STATUS.md).
 
 ## Known limits
 
-- **AI limits:** an analysis uses about 3 requests and 10,000 tokens. Daily caps (150 requests and 300,000 tokens for OpenAI) limit spending, and each visitor can run 4 analyses an hour. The saved example always works.
+- **AI limits:** an analysis uses about 3 requests and 10,000 tokens. Daily caps (150 requests and 300,000 tokens for OpenAI) limit spending, and each visitor can run 15 analyses an hour (refused questions don't count). The saved example always works.
 - **Data:** uploads are deleted after 24 hours, but don't upload sensitive data to a public demo.
 - **Excel:** only the first sheet of an .xlsx file is read. Older .xls files aren't supported.
 - **One sandbox layer:** containers share the server's kernel. See [SECURITY.md](SECURITY.md).

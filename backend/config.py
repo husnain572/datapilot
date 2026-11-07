@@ -73,7 +73,8 @@ class Settings(BaseSettings):
     executor_url: str = "http://127.0.0.1:8100"
     executor_token: SecretStr | None = None
     # The site is open to everyone, so each visitor gets a fair share of the free AI allowance.
-    visitor_analyses_per_hour: int = Field(default=4, ge=1)
+    # The daily AI caps limit total spending; this only stops one visitor taking everything.
+    visitor_analyses_per_hour: int = Field(default=15, ge=1)
     visitor_lab_runs_per_hour: int = Field(default=3, ge=1)
 
     @field_validator("ai_base_url", "ai_fallback_base_url")

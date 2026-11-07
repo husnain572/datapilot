@@ -688,3 +688,25 @@ def test_lab_flags_a_successful_attack():
 
     assert results["Send data out"].contained is False
     assert results["Steal secrets"].contained is False
+
+
+def test_refused_questions_do_not_use_up_the_hourly_limit(api):
+    client, scripted = api
+    refusal = draft("", can_answer=False, reason="That's a greeting, not a question about the data.")
+    scripted["ai"].answers = [refusal, refusal, refusal]
+    dataset_id = upload(client)
+
+    for _ in range(3):  # More than the test limit of 2 an hour.
+        assert ask(client, dataset_id).status_code == 202
+
+
+def test_visitor_limit_release_gives_back_one_use(tmp_path):
+    from backend.services.usage import VisitorLimiter, VisitorLimitReached
+
+    limiter = VisitorLimiter(tmp_path)
+    limiter.record("v", "analysis", 1)
+    limiter.release("v", "analysis")
+    limiter.record("v", "analysis", 1)  # Allowed again.
+
+    with pytest.raises(VisitorLimitReached):
+        limiter.record("v", "analysis", 1)

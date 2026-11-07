@@ -78,9 +78,14 @@ def _run_analysis(
     csv_text: str,
     profile: DatasetProfile,
     parent: AnalysisRecord | None,
+    limiter: VisitorLimiter,
+    visitor: str,
 ) -> None:
     try:
         pipeline.run(record, csv_text, profile, parent)
+        if record.status == "refused":
+            # Questions the data can't answer (or greetings) don't run any analysis, so don't count them.
+            limiter.release(visitor, "analysis")
     finally:
         pipeline.ai.close()
         pipeline.executor.close()
@@ -154,7 +159,16 @@ def create_analysis(
     analyses.save(record)
 
     pipeline = AnalysisPipeline(ai, executor, analyses)
-    background.add_task(_run_analysis, pipeline, record, datasets.read_csv(request.dataset_id), info.profile, parent)
+    background.add_task(
+        _run_analysis,
+        pipeline,
+        record,
+        datasets.read_csv(request.dataset_id),
+        info.profile,
+        parent,
+        VisitorLimiter(settings.data_dir),
+        visitor,
+    )
     return record
 
 

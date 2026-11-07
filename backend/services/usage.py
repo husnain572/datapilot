@@ -87,7 +87,7 @@ class VisitorLimiter:
         self.path = data_dir / "visitor_usage.json"
 
     def record(self, visitor: str, action: str, hourly_limit: int) -> None:
-        key = f"{action}:{hashlib.sha256(visitor.encode()).hexdigest()[:16]}"
+        key = self._key(visitor, action)
         now = time.time()
         with self._lock:
             data = self._read()
@@ -103,6 +103,19 @@ class VisitorLimiter:
             data[key] = recent + [now]
             self.path.parent.mkdir(parents=True, exist_ok=True)
             self.path.write_text(json.dumps(data), encoding="utf-8")
+
+    def release(self, visitor: str, action: str) -> None:
+        """Give back the most recent use, for example when a question was refused and nothing ran."""
+        key = self._key(visitor, action)
+        with self._lock:
+            data = self._read()
+            if data.get(key):
+                data[key] = sorted(data[key])[:-1]
+                self.path.write_text(json.dumps(data), encoding="utf-8")
+
+    @staticmethod
+    def _key(visitor: str, action: str) -> str:
+        return f"{action}:{hashlib.sha256(visitor.encode()).hexdigest()[:16]}"
 
     def _read(self) -> dict[str, list[float]]:
         try:
