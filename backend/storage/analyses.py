@@ -1,6 +1,9 @@
 """Stores each analysis as one JSON file, named with a random ID."""
 
+import hashlib
+import json
 import os
+import threading
 import uuid
 from datetime import datetime, timedelta, timezone
 from pathlib import Path
@@ -25,7 +28,12 @@ def load_example() -> AnalysisRecord | None:
         return None
 
 
+CACHE_FILE = "reuse-index.json"
+
+
 class AnalysisStore:
+    _cache_lock = threading.Lock()
+
     def __init__(self, data_dir: Path, ttl_hours: int) -> None:
         self.root = data_dir / "analyses"
         self.ttl = timedelta(hours=ttl_hours)
@@ -53,12 +61,45 @@ class AnalysisStore:
             record.message = "This analysis was interrupted. Please ask again."
         return record
 
+    # --- Reusing answers: the same question on identical data gives the same verified result. ---
+
+    @staticmethod
+    def cache_key(csv_text: str, question: str) -> str:
+        normalized = " ".join(question.lower().split()).rstrip(" .?!")
+        return hashlib.sha256(f"{csv_text}\x00{normalized}".encode()).hexdigest()
+
+    def remember(self, key: str, analysis_id: UUID) -> None:
+        with self._cache_lock:
+            cache = self._read_cache()
+            cache[key] = str(analysis_id)
+            self.root.mkdir(parents=True, exist_ok=True)
+            (self.root / CACHE_FILE).write_text(json.dumps(cache), encoding="utf-8")
+
+    def find_reusable(self, key: str) -> AnalysisRecord | None:
+        """A completed earlier analysis of the same question on the same data, if one is still stored."""
+        with self._cache_lock:
+            analysis_id = self._read_cache().get(key)
+        if analysis_id is None:
+            return None
+        record = self.get(UUID(analysis_id))
+        if record is None or record.status != "completed" or record.result is None:
+            return None
+        return record
+
+    def _read_cache(self) -> dict[str, str]:
+        try:
+            return json.loads((self.root / CACHE_FILE).read_text(encoding="utf-8"))
+        except (OSError, ValueError):
+            return {}
+
     def purge_expired(self) -> int:
         if not self.root.is_dir():
             return 0
         cutoff = datetime.now(timezone.utc).timestamp() - self.ttl.total_seconds()
         removed = 0
         for path in self.root.iterdir():
+            if path.name == CACHE_FILE:
+                continue
             if path.stat().st_mtime < cutoff:
                 path.unlink(missing_ok=True)
                 removed += 1

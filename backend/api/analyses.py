@@ -83,6 +83,8 @@ def _run_analysis(
 ) -> None:
     try:
         pipeline.run(record, csv_text, profile, parent)
+        if record.status == "completed" and parent is None:
+            pipeline.store.remember(pipeline.store.cache_key(csv_text, record.question), record.analysis_id)
         if record.status == "refused":
             # Questions the data can't answer (or greetings) don't run any analysis, so don't count them.
             limiter.release(visitor, "analysis")
@@ -135,6 +137,28 @@ def create_analysis(
         if parent is None or parent.dataset_id != request.dataset_id:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "The earlier analysis wasn't found for this dataset.")
 
+    csv_text = datasets.read_csv(request.dataset_id)
+    now = datetime.now(timezone.utc)
+    if parent is None:
+        earlier = analyses.find_reusable(analyses.cache_key(csv_text, request.question))
+        if earlier is not None:
+            # Same question, identical data: reuse the verified answer instantly, with no AI or sandbox.
+            reused = earlier.model_copy(
+                update={
+                    "analysis_id": uuid.uuid4(),
+                    "dataset_id": request.dataset_id,
+                    "question": request.question.strip(),
+                    "created_at": now,
+                    "updated_at": now,
+                    "reused": True,
+                    "ai_requests": 0,
+                }
+            )
+            analyses.save(reused)
+            ai.close()
+            executor.close()
+            return reused
+
     if analyses_left_today(settings, usage_tracker(settings)) < 1:
         raise HTTPException(
             status.HTTP_429_TOO_MANY_REQUESTS,
@@ -146,7 +170,6 @@ def create_analysis(
     if not analysis_slots.acquire(blocking=False):
         raise HTTPException(status.HTTP_429_TOO_MANY_REQUESTS, "The server is busy. Please try again in a minute.")
 
-    now = datetime.now(timezone.utc)
     record = AnalysisRecord(
         analysis_id=uuid.uuid4(),
         dataset_id=request.dataset_id,
@@ -163,7 +186,7 @@ def create_analysis(
         _run_analysis,
         pipeline,
         record,
-        datasets.read_csv(request.dataset_id),
+        csv_text,
         info.profile,
         parent,
         VisitorLimiter(settings.data_dir),

@@ -269,3 +269,21 @@ def test_router_builds_an_openai_client_with_gemini_still_available_as_fallback(
     assert isinstance(router.providers[0].client, OpenAIResponsesClient)
     assert router.providers[1].spec.model == "gemini-3.8-flash"
     router.close()
+
+
+def test_summary_uses_its_own_faster_reasoning_effort():
+    fake = FakeOpenAI(response_body(), response_body())
+    client = fake.client(reasoning_effort="low", summary_reasoning_effort="none")
+
+    client.chat_structured(MESSAGES, Plan)
+    client.chat_structured(MESSAGES, Plan, purpose="summary")
+
+    assert fake.body(0)["reasoning"] == {"effort": "low"}
+    assert fake.body(1)["reasoning"] == {"effort": "none"}
+
+
+def test_faster_efforts_are_the_defaults():
+    configured = settings()
+
+    assert configured.openai_reasoning_effort == "low"
+    assert configured.openai_summary_reasoning_effort == "none"

@@ -432,9 +432,11 @@ def test_api_runs_an_analysis_and_serves_its_report(api):
     assert CODE in report.text
 
 
-def ask(client, dataset_id, visitor="203.0.113.7"):
+def ask(client, dataset_id, visitor="203.0.113.7", question=None):
+    # A different question each time, so answers aren't reused.
+    question = question or f"Total revenue, question {uuid4().hex[:6]}?"
     return client.post(
-        "/api/v1/analyses", json={"dataset_id": dataset_id, "question": "Total?"}, headers={"X-Visitor-Id": visitor}
+        "/api/v1/analyses", json={"dataset_id": dataset_id, "question": question}, headers={"X-Visitor-Id": visitor}
     )
 
 
@@ -710,3 +712,43 @@ def test_visitor_limit_release_gives_back_one_use(tmp_path):
 
     with pytest.raises(VisitorLimitReached):
         limiter.record("v", "analysis", 1)
+
+
+def test_same_question_on_identical_data_is_answered_instantly(api):
+    client, scripted = api
+    first_dataset, second_dataset = upload(client), upload(client)  # Same file uploaded twice.
+
+    first = ask(client, first_dataset, question="What is total revenue?").json()
+    requests_after_first = len(scripted["ai"].requests)
+    second = ask(client, second_dataset, question="  what is TOTAL revenue  ").json()
+
+    assert second["status"] == "completed"
+    assert second["reused"] is True
+    assert second["analysis_id"] != first["analysis_id"]
+    assert second["dataset_id"] == second_dataset
+    assert second["result"] == client.get(f"/api/v1/analyses/{first['analysis_id']}").json()["result"]
+    assert len(scripted["ai"].requests) == requests_after_first  # No AI used.
+    assert client.get(f"/api/v1/analyses/{second['analysis_id']}/report").status_code == 200
+
+
+def test_different_data_is_never_given_a_reused_answer(api):
+    client, scripted = api
+    scripted["ai"].answers = [draft(), insights()] + [draft()] * 3
+    scripted["sandbox"].runs = [run_of(RESULT_OK)] * 4
+    first = upload(client)
+    other = client.post(
+        "/api/v1/datasets", files={"file": ("other.csv", (CSV + "Pen,1,10\n").encode(), "text/csv")}
+    ).json()["dataset_id"]
+
+    ask(client, first, question="What is total revenue?")
+    response = ask(client, other, question="What is total revenue?").json()
+
+    assert response["reused"] is False
+    assert len(scripted["ai"].requests) > 2  # The second dataset was analyzed afresh.
+
+
+def test_cache_key_ignores_case_spacing_and_end_punctuation():
+    from backend.storage.analyses import AnalysisStore
+
+    assert AnalysisStore.cache_key("a\n1\n", "What is total revenue?") == AnalysisStore.cache_key("a\n1\n", "  what is   TOTAL revenue ")
+    assert AnalysisStore.cache_key("a\n1\n", "x") != AnalysisStore.cache_key("a\n2\n", "x")

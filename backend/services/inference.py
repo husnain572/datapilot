@@ -205,6 +205,7 @@ class InferenceClient:
         *,
         temperature: float | None = None,
         max_completion_tokens: int | None = None,
+        purpose: str = "analysis",  # Used by providers with per-step settings; ignored here.
     ) -> SchemaT:
         """Ask for an answer matching a Pydantic model, and check that it really does."""
         if self._structured_mode == "prompt":

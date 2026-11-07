@@ -393,3 +393,20 @@ def test_no_emoji_or_tick_marks_on_the_page(run_page):
     text = " ".join(item.value for item in [*page.markdown, *page.caption])
 
     assert not re.search("[\u2600-\u27BF\U0001F300-\U0001FAFF\u25CF]", text)
+
+
+def test_verified_figures_appear_before_the_summary_is_written(run_page):
+    record = {**COMPLETED, "status": "running", "stage": "Explaining the verified results", "insights": None}
+
+    page = run_page(FakeBackend(record))
+
+    assert not page.exception
+    assert any(metric.value == "1,234.50" for metric in page.metric)
+    assert any("Writing the summary" in item.value for item in page.info)
+    assert not any("Download the full report" in b.label for b in page.get("download_button"))
+
+
+def test_reused_answers_are_labelled(run_page):
+    page = run_page(FakeBackend({**COMPLETED, "reused": True}))
+
+    assert any("Answered instantly" in item.value for item in page.caption)

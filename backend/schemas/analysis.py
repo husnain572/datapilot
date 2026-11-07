@@ -194,6 +194,8 @@ class AnalysisRecord(BaseModel):
     removed_claims: list[str] = Field(default_factory=list)
     message: str | None = None
     ai_requests: int = 0
+    # True when this answer was copied from an identical earlier question on identical data.
+    reused: bool = False
 
 
 class AnalysisRequest(BaseModel):

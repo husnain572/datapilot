@@ -613,7 +613,7 @@ def suggested_questions(profile: dict) -> list[str]:
     return questions[:4]
 
 
-def steps_html(stage: str) -> str:
+def steps_html(stage: str, elapsed: float = 0) -> str:
     """A progress bar with the step names, shown only while an analysis runs."""
     current = next((index for index, (_, prefix) in enumerate(STEPS) if stage.startswith(prefix)), 0)
     percent = int((current + 0.5) / len(STEPS) * 100)
@@ -624,6 +624,7 @@ def steps_html(stage: str) -> str:
     return (
         f'<div class="dp-progress"><div class="dp-progress-bar" style="width:{percent}%"></div></div>'
         f'<div class="dp-progress-labels">{labels}</div>'
+        f'<div class="dp-step-note">{elapsed:.0f} seconds · Most questions take 15 to 40 seconds.</div>'
     )
 
 
@@ -631,18 +632,32 @@ def wait_for_analysis(analysis_id: str) -> None:
     """Show live progress until the analysis finishes, then remember it."""
     tracker = st.empty()
     tracker.markdown(steps_html("Waiting to start"), unsafe_allow_html=True)
-    deadline = time.monotonic() + MAX_WAIT_SECONDS
+    started = time.monotonic()
     record = None
-    while time.monotonic() < deadline:
+    while time.monotonic() - started < MAX_WAIT_SECONDS:
         record = load_analysis(analysis_id)
         if record is not None:
-            tracker.markdown(steps_html(record["stage"]), unsafe_allow_html=True)
-            if record["status"] in ("completed", "failed", "refused"):
-                break
+            tracker.markdown(steps_html(record["stage"], time.monotonic() - started), unsafe_allow_html=True)
+            if record["status"] in ("completed", "failed", "refused") or results_ready(record):
+                break  # Verified results can be shown while the summary is still being written.
         time.sleep(POLL_SECONDS)
     tracker.empty()
     st.session_state.history.append({"analysis_id": analysis_id, "question": record["question"] if record else ""})
     st.session_state.viewing = analysis_id
+
+
+def results_ready(record: dict) -> bool:
+    """True when the figures are verified but the written summary isn't finished yet."""
+    return record["status"] == "running" and bool(record.get("result")) and record["stage"].startswith("Explaining")
+
+
+@st.fragment(run_every=2)
+def wait_for_summary(analysis_id: str) -> None:
+    """Check every 2 seconds, and redraw the page once the summary is ready."""
+    latest = load_analysis(analysis_id)
+    if latest is not None and latest["status"] != "running":
+        st.rerun(scope="app")
+    st.info("Writing the summary and recommendations...")
 
 
 def show_question_box(dataset: dict) -> None:
@@ -871,17 +886,22 @@ def show_analysis(record: dict) -> None:
         st.warning(f"This dataset can't answer that question: {plain(record.get('message'))}")
     elif record["status"] == "failed":
         st.error(plain(record.get("message") or "The analysis failed."))
-    elif record["status"] != "completed":
+    elif record["status"] != "completed" and not results_ready(record):
         st.info(f"Still working: {plain(record['stage'])}")
 
     completed = record["status"] == "completed"
-    if completed:
-        if record.get("message"):
+    if completed or results_ready(record):
+        if completed and record.get("message"):
             st.warning(plain(record["message"]))
+        if record.get("reused"):
+            st.caption("Answered instantly: this exact question was already analyzed on identical data.")
         show_summary(record)
         show_key_figures(record)
         show_result_charts(record)
-        show_insights(record)
+        if completed:
+            show_insights(record)
+        else:
+            wait_for_summary(str(record["analysis_id"]))
 
     views = []
     if completed:

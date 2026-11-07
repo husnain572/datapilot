@@ -326,3 +326,20 @@ def test_command_has_every_security_setting():
     assert "--privileged" not in command
     assert " -e " not in command
     assert "--env" not in command
+
+
+def test_original_data_is_read_only_but_copies_are_editable(tmp_path):
+    document = run_ok(
+        "data = df.assign(revenue=df.quantity * df.unit_price)\n"
+        "data['x'] = 1\n"
+        "try:\n"
+        "    df['revenue'] = 1\n"
+        "    emit_metric('blocked', 0)\n"
+        "except TypeError:\n"
+        "    emit_metric('blocked', 1)\n"
+        "emit_metric('missing', int(df.isna().sum().sum()))",
+        tmp_path,
+    )
+
+    assert metric(document, "blocked") == 1
+    assert metric(document, "missing") == 1  # Only the real blank, not the new column's.

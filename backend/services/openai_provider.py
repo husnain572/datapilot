@@ -92,12 +92,14 @@ class OpenAIResponsesClient:
         max_attempts: int = 3,
         max_output_tokens: int = 8192,
         reasoning_effort: str | None = None,
+        summary_reasoning_effort: str | None = None,
         http_client: httpx.Client | None = None,
     ) -> None:
         self.model = model
         self.last_usage = TokenUsage()
         self._max_output_tokens = max_output_tokens
         self._reasoning_effort = reasoning_effort
+        self._summary_reasoning_effort = summary_reasoning_effort
         # The SDK retries rate limits and server errors itself, with growing waits.
         self._client = openai.OpenAI(
             api_key=api_key.get_secret_value(),
@@ -125,8 +127,12 @@ class OpenAIResponsesClient:
         *,
         temperature: float | None = None,  # Not sent: OpenAI's current models are reasoning models.
         max_completion_tokens: int | None = None,
+        purpose: str = "analysis",
     ) -> SchemaT:
-        """Ask for an answer matching a Pydantic model, and check that it really does."""
+        """Ask for an answer matching a Pydantic model, and check that it really does.
+
+        `purpose` is "analysis" for planning and code, or "summary" for explaining verified results.
+        """
         request: dict = {
             "model": self.model,
             "instructions": "\n\n".join(m.content for m in messages if m.role == "system") or None,
@@ -134,8 +140,9 @@ class OpenAIResponsesClient:
             "text_format": schema,
             "max_output_tokens": max_completion_tokens or self._max_output_tokens,
         }
-        if self._reasoning_effort:
-            request["reasoning"] = {"effort": self._reasoning_effort}
+        effort = self._summary_reasoning_effort if purpose == "summary" else self._reasoning_effort
+        if effort:
+            request["reasoning"] = {"effort": effort}
 
         try:
             response = self._client.responses.parse(**request)

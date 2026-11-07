@@ -143,7 +143,12 @@ class AIRouter:
             provider.client.close()
 
     def chat_structured(
-        self, messages: list[ChatMessage], schema: type[SchemaT], *, temperature: float | None = None
+        self,
+        messages: list[ChatMessage],
+        schema: type[SchemaT],
+        *,
+        temperature: float | None = None,
+        purpose: str = "analysis",
     ) -> SchemaT:
         """Ask the first provider with allowance left, moving on only when another could help."""
         last_error: InferenceError | None = None
@@ -153,7 +158,7 @@ class AIRouter:
                 continue
             self.usage.record_request(provider.spec.name)
             try:
-                result = provider.client.chat_structured(messages, schema, temperature=temperature)
+                result = provider.client.chat_structured(messages, schema, temperature=temperature, purpose=purpose)
             except FALLBACK_ERRORS as error:
                 logger.warning("AI provider %s failed (%s), trying the next one if any.", provider.spec.name, error)
                 last_error = error
@@ -179,6 +184,7 @@ def create_client(spec: ProviderSpec, settings: Settings) -> InferenceClient | O
             max_attempts=settings.ai_max_attempts,
             max_output_tokens=settings.openai_max_output_tokens,
             reasoning_effort=spec.reasoning_effort,
+            summary_reasoning_effort=settings.openai_summary_reasoning_effort,
         )
     return InferenceClient(
         spec.api_key,

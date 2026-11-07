@@ -24,7 +24,9 @@ Reply with one JSON object with these fields:
 - code: Python code, or an empty string if can_answer is false.
 
 The code runs with these already available, and must not import or load anything else:
-- df: the full dataset as a pandas DataFrame. Dates are text, so convert with pd.to_datetime(..., errors="coerce").
+- df: the full dataset as a pandas DataFrame. It is read-only: never add or change its columns. Start with \
+data = df.assign(...) for new columns. Count missing values and duplicates on df itself. Dates are text, so convert \
+with pd.to_datetime(..., errors="coerce").
 - pd and np: pandas and NumPy.
 - emit_metric(name, value, unit=None, check=None): report one number.
 - emit_table(name, table, check=None): report a pandas DataFrame.
@@ -55,6 +57,7 @@ check={"op": "sum", "columns": ["quantity", "unit_price"], "group_by": "order_da
 Only add a check that matches exactly how the number was calculated. Check tables only when each row is a full group total.
 
 Example:
+emit_metric("Total missing cells", int(df.isna().sum().sum()), check={"op": "count_missing"})
 data = df.assign(revenue=df["quantity"] * df["unit_price"])
 emit_metric("Total revenue", data["revenue"].sum(), check={"op": "sum", "columns": ["quantity", "unit_price"]})
 top = data.groupby("product", as_index=False)["revenue"].sum().nlargest(5, "revenue")

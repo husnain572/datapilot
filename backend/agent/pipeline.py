@@ -125,10 +125,12 @@ class AnalysisPipeline:
         record.stage = stage
         self.store.save(record)
 
-    def _ask(self, record: AnalysisRecord, messages: list[ChatMessage], schema: type[SchemaT]) -> SchemaT:
+    def _ask(
+        self, record: AnalysisRecord, messages: list[ChatMessage], schema: type[SchemaT], purpose: str = "analysis"
+    ) -> SchemaT:
         record.ai_requests += 1
         try:
-            return self.ai.chat_structured(messages, schema, temperature=0)
+            return self.ai.chat_structured(messages, schema, temperature=0, purpose=purpose)
         except DailyLimitReached as error:
             raise AnalysisStopped(str(error)) from error
 
@@ -241,13 +243,13 @@ class AnalysisPipeline:
             ),
         ]
         try:
-            insights = self._ask(record, messages, Insights)
+            insights = self._ask(record, messages, Insights, purpose="summary")
             invented = find_invented(insights, record.result, record.question)
             if invented:
                 messages.append(
                     ChatMessage(role="user", content=prompts.retry_explain_request(insights, invented))
                 )
-                insights = self._ask(record, messages, Insights)
+                insights = self._ask(record, messages, Insights, purpose="summary")
             record.insights, record.removed_claims = remove_invented(insights, record.result, record.question)
         except (InferenceError, AnalysisStopped) as error:
             logger.warning("Explanation failed: %s", error)

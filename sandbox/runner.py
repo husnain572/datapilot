@@ -57,6 +57,24 @@ def _table(frame: Any) -> pd.DataFrame:
     return frame
 
 
+class ReadOnlyFrame(pd.DataFrame):
+    """The uploaded data. Adding or replacing its columns raises a clear error, because changed
+    data would make counts like missing values wrong. Copies are ordinary, editable DataFrames."""
+
+    @property
+    def _constructor(self):
+        return pd.DataFrame
+
+    def __setitem__(self, key, value):
+        raise TypeError(
+            "df is read-only, so its counts stay correct. Work on a copy instead: "
+            "data = df.assign(revenue=df['quantity'] * df['unit_price'])"
+        )
+
+    def insert(self, *args, **kwargs):
+        self.__setitem__(None, None)
+
+
 class Results:
     def __init__(self) -> None:
         self.metrics: list[dict] = []
@@ -141,7 +159,7 @@ def main() -> None:
             code = compile(file.read(), "analysis.py", "exec")
         namespace = {
             "__name__": "__main__",
-            "df": pd.read_csv(DATA_PATH, low_memory=False),
+            "df": ReadOnlyFrame(pd.read_csv(DATA_PATH, low_memory=False)),
             "pd": pd,
             "np": np,
             "emit_metric": results.emit_metric,

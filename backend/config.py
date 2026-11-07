@@ -50,7 +50,11 @@ class Settings(BaseSettings):
     openai_api_key: SecretStr | None = None
     # Required when using OpenAI, for example gpt-6-luna (cheapest) or gpt-6-astra (flagship).
     openai_model: str | None = None
-    openai_reasoning_effort: str | None = None
+    # Measured on Nov 7, 2026 with gpt-5.6-luna: writing the analysis code took 25.7 s at the
+    # default effort, 14.6 s at "low", and 9.0 s at "none".
+    openai_reasoning_effort: str | None = "low"
+    # The summary only describes numbers that are already verified, so it needs little thinking.
+    openai_summary_reasoning_effort: str | None = "none"
     openai_max_output_tokens: int = Field(default=8192, ge=1)
     # Caps on daily use, which also cap daily spending. Set a spending limit in OpenAI too.
     openai_daily_request_limit: int = Field(default=150, ge=0)
@@ -85,7 +89,7 @@ class Settings(BaseSettings):
             raise ValueError("AI_BASE_URL and AI_FALLBACK_BASE_URL must start with https://")
         return value
 
-    @field_validator("ai_reasoning_effort", "ai_fallback_reasoning_effort", "openai_reasoning_effort", "openai_model", mode="before")
+    @field_validator("ai_reasoning_effort", "ai_fallback_reasoning_effort", "openai_reasoning_effort", "openai_summary_reasoning_effort", "openai_model", mode="before")
     @classmethod
     def blank_means_none(cls, value: object) -> object:
         return None if value == "" else value
