@@ -7,6 +7,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query, Response, UploadFi
 
 from backend.config import Settings, get_settings
 from backend.schemas.datasets import DatasetInfo, DatasetPreview
+from backend.services.dashboard import DatasetCharts, build_dashboard
 from backend.services.csv_validation import CsvValidationError, validate_csv
 from backend.services.file_formats import SUPPORTED_FORMATS, convert_to_csv, file_extension
 from backend.services.profiling import load_dataframe, profile_dataframe, records
@@ -82,6 +83,13 @@ def preview_dataset(
         columns=[str(name) for name in df.columns],
         rows=records(df.head(limit)),
     )
+
+
+@router.get("/{dataset_id}/charts")
+def dataset_charts(dataset_id: UUID, store: StoreDep) -> DatasetCharts:
+    """Chart data for the dashboard, calculated directly from the dataset. No AI is used."""
+    info = _require_dataset(store, dataset_id)
+    return build_dashboard(load_dataframe(store.read_csv(dataset_id)), info.profile)
 
 
 @router.delete("/{dataset_id}", status_code=status.HTTP_204_NO_CONTENT)

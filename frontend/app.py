@@ -1,5 +1,5 @@
+import base64
 import csv
-import html
 import io
 import os
 import re
@@ -19,21 +19,24 @@ DATASETS_URL = f"{BACKEND_URL}/api/v1/datasets"
 ANALYSES_URL = f"{BACKEND_URL}/api/v1/analyses"
 LAB_URL = f"{BACKEND_URL}/api/v1/containment-tests"
 USAGE_URL = f"{BACKEND_URL}/api/v1/usage"
-EXAMPLE_URL = f"{BACKEND_URL}/api/v1/examples/sales"
 EXAMPLE_ID = "00000000-0000-4000-8000-00000000da7a"
 UPLOAD_TYPES = ["csv", "xlsx", "json", "parquet", "tsv", "txt"]
 SAMPLE_CSV = Path(__file__).parents[1] / "sample_data" / "sales.csv"
+ASSETS = Path(__file__).with_name("assets")
+STYLE_FILE = Path(__file__).with_name("style.css")
 UPLOAD_TIMEOUT_SECONDS = 120
 LAB_TIMEOUT_SECONDS = 150
 POLL_SECONDS = 1.5
 MAX_WAIT_SECONDS = 600
-SERIES_COLOR = "#2a78d6"
+SERIES_COLOR = "#2563eb"
+AREA_FILL = "rgba(37, 99, 235, 0.10)"
+GRID_COLOR = "#eef1f6"
+INK = "#26324b"
 DEMO_QUESTION = (
     "Analyze sales performance. Calculate total revenue, identify the top five products by revenue, "
     "compare monthly revenue, detect missing values, and recommend three data-backed actions."
 )
 CAVEAT = "These findings show patterns in this dataset. They don't prove what caused them."
-STYLE_FILE = Path(__file__).with_name("style.css")
 UNSAFE_HTML_CHARACTERS = set("&<>\"'\\`*_{}[]()#+-.!|~$:")
 VERIFICATION_LABELS = {
     "verified": "✅ Verified",
@@ -47,6 +50,16 @@ STEPS = [
     ("Verify results", "Validating"),
     ("Explain findings", "Explaining"),
 ]
+# Page name, icon, and the short description under it in the sidebar.
+PAGES = [
+    ("Dashboard", ":material/space_dashboard:"),
+    ("Upload data", ":material/upload_file:"),
+    ("Ask AI", ":material/auto_awesome:"),
+    ("Containment Lab", ":material/shield_lock:"),
+]
+
+
+# --- Safe text and small building blocks ---
 
 
 def plain(text: object) -> str:
@@ -59,19 +72,28 @@ def safe_html(text: object) -> str:
     return "".join(f"&#{ord(char)};" if char in UNSAFE_HTML_CHARACTERS else char for char in str(text))
 
 
+def show_html(content: str) -> None:
+    # Only ever given our own markup, with outside text passed through safe_html.
+    st.markdown(content, unsafe_allow_html=True)
+
+
 def card(title: str, body: str = "", label: str = "") -> str:
     """Build a card. Callers pass text through safe_html if it isn't our own."""
     tag = f'<div class="dp-card-label">{label}</div>' if label else ""
     return f'<div class="dp-card">{tag}<div class="dp-card-title">{title}</div><div class="dp-card-body">{body}</div></div>'
 
 
-def show_html(content: str) -> None:
-    # Only ever given our own markup, with outside text passed through safe_html.
-    st.markdown(content, unsafe_allow_html=True)
-
-
 def section(title: str) -> None:
     show_html(f'<div class="dp-section">{title}</div>')
+
+
+def card_title(title: str, note: str = "") -> None:
+    extra = f'<div class="dp-card-note">{note}</div>' if note else ""
+    show_html(f'<div class="dp-card-heading">{title}</div>{extra}')
+
+
+def image_data(path: Path) -> str:
+    return "data:image/png;base64," + base64.b64encode(path.read_bytes()).decode()
 
 
 def safe_csv(columns: list[str], rows: list[list]) -> str:
@@ -85,6 +107,16 @@ def safe_csv(columns: list[str], rows: list[list]) -> str:
     writer.writerow([cell(column) for column in columns])
     writer.writerows([[cell(value) for value in row] for row in rows])
     return output.getvalue()
+
+
+def format_number(value: float | int, unit: str | None = None) -> str:
+    text = f"{value:,}" if isinstance(value, int) or float(value).is_integer() else f"{value:,.2f}"
+    if text.endswith(".0"):
+        text = text[:-2]
+    return f"{text} {unit}" if unit else text
+
+
+# --- Talking to the backend ---
 
 
 def backend_is_healthy() -> bool:
@@ -115,22 +147,41 @@ def visitor_headers() -> dict[str, str]:
     return {"X-Visitor-Id": address[:200] or "unknown"}
 
 
-def analyses_left_today() -> int | None:
+def get_json(url: str, timeout: float = 15) -> dict | None:
     try:
-        response = httpx.get(USAGE_URL, timeout=5)
+        response = httpx.get(url, timeout=timeout)
     except httpx.HTTPError:
         return None
-    return response.json().get("analyses_left_today") if response.status_code == 200 else None
+    if response.status_code != 200:
+        return None
+    try:
+        data = response.json()
+    except ValueError:
+        return None
+    return data if isinstance(data, dict) else None
 
 
-def example_button(key: str) -> None:
-    """A saved, real analysis of the sample data. It appears instantly and uses no AI requests."""
-    if st.button("See an example analysis", key=key, help="A real, verified analysis of the sample data, saved earlier."):
-        st.session_state.viewing = EXAMPLE_ID
+def analyses_left_today() -> int | None:
+    data = get_json(USAGE_URL, timeout=5)
+    left = data.get("analyses_left_today") if data else None
+    return left if isinstance(left, int) else None
 
 
-def upload_dataset(filename: str, content: bytes) -> None:
-    """Send a file to the backend, and remember the result or show why it failed."""
+def load_analysis(analysis_id: str) -> dict | None:
+    return get_json(f"{ANALYSES_URL}/{analysis_id}")
+
+
+def load_preview(dataset_id: str) -> dict | None:
+    return get_json(f"{DATASETS_URL}/{dataset_id}/preview", timeout=30)
+
+
+def load_dashboard(dataset_id: str) -> dict | None:
+    data = get_json(f"{DATASETS_URL}/{dataset_id}/charts", timeout=60)
+    return data if data and "missing" in data else None
+
+
+def upload_dataset(filename: str, content: bytes) -> bool:
+    """Send a file to the backend. Returns True on success, or remembers why it failed."""
     try:
         response = httpx.post(
             DATASETS_URL,
@@ -139,14 +190,17 @@ def upload_dataset(filename: str, content: bytes) -> None:
         )
     except httpx.HTTPError:
         st.session_state.upload_error = "Couldn't reach the backend. Please try again."
-        return
+        return False
 
     if response.status_code == 201:
         st.session_state.dataset = response.json()
         st.session_state.upload_error = None
         st.session_state.history = []
-    else:
-        st.session_state.upload_error = error_detail(response, "The upload failed.")
+        st.session_state.viewing = None
+        st.session_state.page = "Dashboard"
+        return True
+    st.session_state.upload_error = error_detail(response, "The upload failed.")
+    return False
 
 
 def remove_dataset() -> None:
@@ -158,132 +212,6 @@ def remove_dataset() -> None:
     st.session_state.dataset = None
     st.session_state.history = []
     st.session_state.viewing = None
-
-
-def load_preview(dataset_id: str) -> dict | None:
-    try:
-        response = httpx.get(f"{DATASETS_URL}/{dataset_id}/preview", timeout=30)
-    except httpx.HTTPError:
-        return None
-    return response.json() if response.status_code == 200 else None
-
-
-def show_hero(healthy: bool) -> None:
-    status = '<span class="dp-dot"></span>Backend connected' if healthy else "Backend unavailable"
-    show_html(
-        f"""<div class="dp-hero"><div class="dp-hero-top"><div><div class="dp-brand">📊 DataPilot</div>
-<div class="dp-tagline">Your Data Analyst. Your Code. Verifiable Results.</div></div>
-<div class="dp-status">{status}</div></div>
-<div class="dp-pitch">Ask questions about a CSV in plain English. AI writes the analysis code, a locked-down sandbox runs it,
-and DataPilot shows only numbers it has checked.</div></div>"""
-    )
-
-
-def show_landing() -> None:
-    show_html(
-        '<div class="dp-grid">'
-        + card("Upload", "We check your file and profile it automatically.", "Step 1")
-        + card("Ask", "AI plans the work and writes the code. It doesn't supply the numbers.", "Step 2")
-        + card("Verify", "Code runs with no network or secrets, then key figures are recalculated.", "Step 3")
-        + "</div>"
-    )
-
-
-def show_upload_section() -> None:
-    section("Start with your data")
-    uploaded = st.file_uploader(
-        "Upload a data file",
-        type=UPLOAD_TYPES,
-        help="CSV, Excel (.xlsx, first sheet), JSON, Parquet, TSV, or TXT. Up to 25 MB.",
-    )
-
-    # Streamlit reruns this script on every click, so only send each file once.
-    if uploaded is not None and uploaded.file_id != st.session_state.get("last_file_id"):
-        st.session_state.last_file_id = uploaded.file_id
-        with st.spinner("Checking your file..."):
-            upload_dataset(uploaded.name, uploaded.getvalue())
-
-    sample, example = st.columns([1, 3])
-    if sample.button("Try the sample sales dataset"):
-        with st.spinner("Loading the sample..."):
-            upload_dataset(SAMPLE_CSV.name, SAMPLE_CSV.read_bytes())
-    with example:
-        example_button("example-landing")
-
-    # The page was drawn before the upload finished, so redraw it to show the dashboard.
-    if st.session_state.get("dataset"):
-        st.rerun()
-
-    if st.session_state.get("upload_error"):
-        st.error(st.session_state.upload_error)
-
-
-def columns_table(columns: list[dict]) -> pd.DataFrame:
-    return pd.DataFrame(
-        {
-            "Column": [c["name"] for c in columns],
-            "Type": [c["kind"] for c in columns],
-            "Missing": [c["missing_count"] for c in columns],
-            "Missing %": [c["missing_percent"] for c in columns],
-            "Unique values": [c["unique_count"] for c in columns],
-        }
-    )
-
-
-def show_numeric_columns(columns: list[dict]) -> None:
-    numeric = [c for c in columns if c["kind"] == "numeric"]
-    if not numeric:
-        st.caption("This dataset has no numeric columns.")
-        return
-    table = pd.DataFrame([{"Column": c["name"], **c["numeric"]} for c in numeric])
-    st.dataframe(table, hide_index=True, width="stretch")
-
-
-def show_category_columns(columns: list[dict]) -> None:
-    categories = [c for c in columns if c.get("top_values")]
-    if not categories:
-        st.caption("This dataset has no category columns.")
-        return
-    for column in categories:
-        st.markdown(f"**{plain(column['name'])}**: most common values")
-        counts = pd.DataFrame(column["top_values"]).rename(columns={"value": "Value", "count": "Count"})
-        st.dataframe(counts, hide_index=True, width="stretch")
-
-
-def show_dataset(dataset: dict) -> None:
-    profile = dataset["profile"]
-
-    header, action = st.columns([4, 1])
-    with header:
-        section(f"📄 {safe_html(dataset['filename'])}")
-        if dataset.get("source_format", "CSV") not in ("CSV", "TSV", "Text"):
-            note = dataset.get("source_note")
-            st.caption(f"Converted from {plain(dataset['source_format'])}" + (f": {plain(note)}" if note else ""))
-    action.button("Remove dataset", on_click=remove_dataset)
-
-    rows, columns, missing, duplicates = st.columns(4)
-    rows.metric("Rows", f"{profile['row_count']:,}")
-    columns.metric("Columns", f"{profile['column_count']:,}")
-    missing.metric("Missing values", f"{profile['missing_cell_count']:,}")
-    duplicates.metric("Duplicate rows", f"{profile['duplicate_row_count']:,}")
-
-    with st.expander("Dataset details"):
-        overview, numbers, categories, preview = st.tabs(
-            ["Columns", "Number statistics", "Categories", "Preview"]
-        )
-        with overview:
-            st.dataframe(columns_table(profile["columns"]), hide_index=True, width="stretch")
-        with numbers:
-            show_numeric_columns(profile["columns"])
-        with categories:
-            show_category_columns(profile["columns"])
-        with preview:
-            data = load_preview(dataset["dataset_id"])
-            if data is None:
-                st.warning("Couldn't load the preview.")
-            else:
-                st.caption(f"First {len(data['rows'])} of {data['total_rows']:,} rows")
-                st.dataframe(pd.DataFrame(data["rows"], columns=data["columns"]), hide_index=True)
 
 
 def start_analysis(dataset_id: str, question: str, parent_id: str | None) -> str | None:
@@ -300,12 +228,386 @@ def start_analysis(dataset_id: str, question: str, parent_id: str | None) -> str
     return response.json()["analysis_id"]
 
 
-def load_analysis(analysis_id: str) -> dict | None:
-    try:
-        response = httpx.get(f"{ANALYSES_URL}/{analysis_id}", timeout=15)
-    except httpx.HTTPError:
-        return None
-    return response.json() if response.status_code == 200 else None
+# --- Navigation ---
+
+
+def current_page() -> str:
+    page = st.session_state.get("page")
+    if page in [name for name, _ in PAGES]:
+        return page
+    return "Ask AI" if st.session_state.get("dataset") else "Upload data"
+
+
+def go_to(page: str) -> None:
+    st.session_state.page = page
+
+
+def open_example() -> None:
+    """A saved, real analysis of the sample data. It appears instantly and uses no AI requests."""
+    st.session_state.viewing = EXAMPLE_ID
+    st.session_state.page = "Ask AI"
+
+
+def set_question(question: str) -> None:
+    st.session_state.question = question
+
+
+def example_button(key: str) -> None:
+    st.button(
+        "See an example analysis",
+        key=key,
+        icon=":material/visibility:",
+        on_click=open_example,
+        help="A real, verified analysis of the sample data, saved earlier. It uses no AI requests.",
+    )
+
+
+def show_sidebar(healthy: bool) -> None:
+    page = current_page()
+    with st.sidebar:
+        show_html(
+            f'<div class="dp-logo"><img src="{image_data(ASSETS / "logo.png")}" alt="">'
+            '<div><div class="dp-logo-name">DataPilot</div><div class="dp-logo-tag">Verifiable AI analyst</div></div></div>'
+        )
+        show_html('<div class="dp-nav-label">Menu</div>')
+        for name, icon in PAGES:
+            st.button(
+                name,
+                icon=icon,
+                key=f"nav-{name}",
+                type="primary" if name == page else "secondary",
+                on_click=go_to,
+                args=(name,),
+                width="stretch",
+            )
+
+        left = analyses_left_today()
+        if left is not None:
+            show_html(
+                f'<div class="dp-side-card"><div class="dp-side-number">{left}</div>'
+                '<div class="dp-side-text">free AI analyses left today, shared by all visitors</div></div>'
+            )
+
+        history = st.session_state.get("history", [])
+        if history:
+            show_html('<div class="dp-nav-label">This session</div>')
+            for item in reversed(history):
+                label = item["question"][:38] + ("..." if len(item["question"]) > 38 else "")
+                if st.button(plain(label), key=f"history-{item['analysis_id']}", width="stretch"):
+                    st.session_state.viewing = item["analysis_id"]
+                    st.session_state.page = "Ask AI"
+
+        status = '<span class="dp-dot"></span>Backend connected' if healthy else '<span class="dp-dot dp-dot-off"></span>Backend unavailable'
+        show_html(f'<div class="dp-side-status">{status}</div>')
+
+
+def page_header(title: str, subtitle: str, label: str = "") -> None:
+    dataset = st.session_state.get("dataset")
+    left, right = st.columns([3, 2], vertical_alignment="center")
+    with left:
+        badge = f'<div class="dp-badge">{label}</div>' if label else ""
+        show_html(f'{badge}<div class="dp-page-title">{title}</div><div class="dp-page-subtitle">{subtitle}</div>')
+    with right:
+        if dataset:
+            show_html(
+                f'<div class="dp-file-chip"><span class="dp-file-icon">📄</span>'
+                f'<span>{safe_html(dataset["filename"])}</span>'
+                f'<span class="dp-file-meta">{dataset["profile"]["row_count"]:,} rows</span></div>'
+            )
+            if dataset.get("source_format", "CSV") not in ("CSV", "TSV", "Text"):
+                note = dataset.get("source_note")
+                st.caption(f"Converted from {plain(dataset['source_format'])}" + (f": {plain(note)}" if note else ""))
+
+
+# --- Charts ---
+
+
+def style_figure(figure: go.Figure, height: int, title: str | None = None) -> go.Figure:
+    figure.update_layout(
+        title=title,
+        height=height,
+        margin={"l": 8, "r": 12, "t": 40 if title else 8, "b": 8},
+        template="plotly_white",
+        paper_bgcolor="rgba(0,0,0,0)",
+        plot_bgcolor="rgba(0,0,0,0)",
+        font={"color": INK, "size": 12},
+        title_font={"size": 15, "color": "#111c33"},
+        showlegend=False,
+        hoverlabel={"bgcolor": "#111c33", "font_color": "#ffffff", "bordercolor": "#111c33"},
+        bargap=0.35,
+    )
+    figure.update_xaxes(automargin=True, gridcolor=GRID_COLOR, zeroline=False, showline=False)
+    figure.update_yaxes(automargin=True, gridcolor=GRID_COLOR, zeroline=False, showline=False)
+    return figure
+
+
+def area_chart(labels: list, values: list, y_title: str, height: int = 320) -> go.Figure:
+    trace = go.Scatter(
+        x=labels,
+        y=values,
+        mode="lines+markers",
+        line={"color": SERIES_COLOR, "width": 2, "shape": "spline", "smoothing": 0.6},
+        marker={"size": 8, "color": "#ffffff", "line": {"color": SERIES_COLOR, "width": 2}},
+        fill="tozeroy",
+        fillcolor=AREA_FILL,
+        hovertemplate="%{x}<br><b>%{y:,.2f}</b><extra></extra>",
+    )
+    figure = style_figure(go.Figure(trace), height)
+    figure.update_yaxes(title=y_title)
+    return figure
+
+
+def ranked_bars(labels: list, values: list, x_title: str, height: int | None = None) -> go.Figure:
+    """Horizontal bars, largest at the top, in one color."""
+    pairs = sorted(zip([str(label) for label in labels], values), key=lambda pair: pair[1] if pair[1] is not None else 0)
+    trace = go.Bar(
+        x=[pair[1] for pair in pairs],
+        y=[pair[0] for pair in pairs],
+        orientation="h",
+        marker={"color": SERIES_COLOR, "cornerradius": 4},
+        hovertemplate="%{y}: <b>%{x:,.2f}</b><extra></extra>",
+    )
+    figure = style_figure(go.Figure(trace), height or max(260, 32 * len(pairs) + 70))
+    figure.update_xaxes(title=x_title)
+    return figure
+
+
+def column_bars(labels: list, values: list, y_title: str, height: int = 300) -> go.Figure:
+    trace = go.Bar(
+        x=[str(label) for label in labels],
+        y=values,
+        marker={"color": SERIES_COLOR, "cornerradius": 4},
+        hovertemplate="%{x}: <b>%{y:,}</b><extra></extra>",
+    )
+    figure = style_figure(go.Figure(trace), height)
+    figure.update_yaxes(title=y_title)
+    return figure
+
+
+def build_chart(chart: dict) -> go.Figure:
+    """Draw a chart the sandbox described as plain values. Nothing from it is treated as code."""
+    title = chart.get("title") or chart["name"]
+    if chart["kind"] in ("bar", "pie"):
+        # Parts of a whole compare best as ranked bars, so pies are drawn this way too.
+        figure = ranked_bars(chart["x"], chart["y"], chart["y_label"])
+    elif chart["kind"] == "line":
+        figure = area_chart([str(value) for value in chart["x"]], chart["y"], chart["y_label"])
+        figure.update_xaxes(title=chart["x_label"])
+    else:
+        trace = go.Scatter(
+            x=chart["x"],
+            y=chart["y"],
+            mode="markers",
+            marker={"size": 8, "color": SERIES_COLOR, "opacity": 0.75},
+            hovertemplate="%{x}, %{y:,.2f}<extra></extra>",
+        )
+        figure = style_figure(go.Figure(trace), 340)
+        figure.update_xaxes(title=chart["x_label"])
+        figure.update_yaxes(title=chart["y_label"])
+    figure.update_layout(title=title, margin={"t": 44})
+    return figure
+
+
+def plot(figure: go.Figure, key: str) -> None:
+    st.plotly_chart(figure, width="stretch", key=key, config={"displaylogo": False})
+
+
+# --- Upload page ---
+
+
+def show_upload_page() -> None:
+    show_html(
+        '<div class="dp-upload-hero"><div class="dp-badge">Data Upload Center</div>'
+        '<div class="dp-upload-title">Upload Your Data</div>'
+        '<div class="dp-page-subtitle">Upload a data file for AI analysis. Your data is checked, profiled, and analyzed '
+        "with code that runs in a locked-down sandbox. Files are deleted after 24 hours.</div></div>"
+    )
+
+    with st.container(border=True):
+        card_title("Choose a data source")
+        local, sample, example = st.columns(3)
+        with local:
+            show_html(
+                '<div class="dp-source dp-source-active"><div class="dp-source-icon">⬆</div>'
+                '<div class="dp-source-name">Local file</div><div class="dp-source-text">Use the upload box below</div></div>'
+            )
+        with sample:
+            show_html(
+                '<div class="dp-source"><div class="dp-source-icon">📊</div><div class="dp-source-name">Sample dataset</div>'
+                '<div class="dp-source-text">1,010 made-up sales records</div></div>'
+            )
+            sample_clicked = st.button("Try the sample sales dataset", width="stretch")
+        with example:
+            show_html(
+                '<div class="dp-source"><div class="dp-source-icon">✨</div><div class="dp-source-name">Example analysis</div>'
+                '<div class="dp-source-text">A finished, verified result</div></div>'
+            )
+            example_button("example-upload")
+
+    uploaded = st.file_uploader(
+        "Drag and drop a file here",
+        type=UPLOAD_TYPES,
+        help="CSV, Excel (.xlsx, first sheet), JSON, Parquet, TSV, or TXT. Up to 25 MB.",
+    )
+    st.caption("Supported: CSV, Excel (.xlsx), JSON, Parquet, TSV, and TXT, up to 25 MB. Don't upload sensitive data.")
+
+    uploaded_now = False
+    # Streamlit reruns this script on every click, so only send each file once.
+    if uploaded is not None and uploaded.file_id != st.session_state.get("last_file_id"):
+        st.session_state.last_file_id = uploaded.file_id
+        with st.spinner("Checking and profiling your file..."):
+            uploaded_now = upload_dataset(uploaded.name, uploaded.getvalue())
+    if sample_clicked:
+        with st.spinner("Loading the sample..."):
+            uploaded_now = upload_dataset(SAMPLE_CSV.name, SAMPLE_CSV.read_bytes())
+
+    if uploaded_now:
+        st.rerun()  # Show the new dataset's dashboard.
+    if st.session_state.get("upload_error"):
+        st.error(st.session_state.upload_error)
+    elif st.session_state.get("dataset"):
+        st.info("Uploading a new file replaces the current dataset.")
+
+
+# --- Dashboard page ---
+
+
+def show_empty_state(message: str) -> None:
+    with st.container(border=True):
+        card_title("No dataset yet", message)
+        first, second, _ = st.columns([1, 1, 2])
+        first.button("Upload a file", on_click=go_to, args=("Upload data",), type="primary", key="empty-upload")
+        with second:
+            example_button("example-empty")
+
+
+def show_kpis(dataset: dict) -> None:
+    profile = dataset["profile"]
+    rows, columns, missing, duplicates = st.columns(4)
+    rows.metric("Rows", f"{profile['row_count']:,}")
+    columns.metric("Columns", f"{profile['column_count']:,}")
+    missing.metric("Missing values", f"{profile['missing_cell_count']:,}")
+    duplicates.metric("Duplicate rows", f"{profile['duplicate_row_count']:,}")
+
+
+def columns_table(columns: list[dict]) -> pd.DataFrame:
+    return pd.DataFrame(
+        {
+            "Column": [c["name"] for c in columns],
+            "Type": [c["kind"] for c in columns],
+            "Missing": [c["missing_count"] for c in columns],
+            "Missing %": [c["missing_percent"] for c in columns],
+            "Unique values": [c["unique_count"] for c in columns],
+        }
+    )
+
+
+def show_trend_card(charts: dict, dataset_id: str) -> None:
+    with st.container(border=True):
+        title, picker = st.columns([3, 2], vertical_alignment="center")
+        with title:
+            card_title("Trend over time", f"By month, from {safe_html(charts['date_column'])}")
+        measure = picker.selectbox("Measure", list(charts["trend"]), key="trend-measure", label_visibility="collapsed")
+        series = charts["trend"][measure]
+        plot(area_chart(series["labels"], series["values"], measure, height=330), f"trend-{dataset_id}")
+
+
+def show_category_card(charts: dict, dataset_id: str) -> None:
+    with st.container(border=True):
+        card_title("Top categories", "The 10 largest groups")
+        column_pick, measure_pick = st.columns(2)
+        column = column_pick.selectbox("Category", list(charts["categories"]), key="category-column")
+        groups = charts["categories"][column]
+        measure = measure_pick.selectbox("Measure", list(groups), key="category-measure")
+        series = groups[measure]
+        plot(ranked_bars(series["labels"], series["values"], measure, height=360), f"categories-{dataset_id}")
+
+
+def show_distribution_card(charts: dict, dataset_id: str) -> None:
+    with st.container(border=True):
+        title, picker = st.columns([3, 2], vertical_alignment="center")
+        with title:
+            card_title("Value distribution", "How many rows fall in each range")
+        column = picker.selectbox("Column", list(charts["histograms"]), key="histogram-column", label_visibility="collapsed")
+        histogram = charts["histograms"][column]
+        plot(column_bars(histogram["labels"], histogram["counts"], "Rows", height=360), f"histogram-{dataset_id}")
+
+
+def show_missing_card(charts: dict, dataset_id: str) -> None:
+    with st.container(border=True):
+        card_title("Missing values", "Blank cells in each column")
+        missing = charts["missing"]
+        if not any(missing["values"]):
+            show_html('<div class="dp-good">✓ No missing values</div>')
+        else:
+            plot(ranked_bars(missing["labels"], missing["values"], "Blank cells", height=330), f"missing-{dataset_id}")
+
+
+def show_dashboard_page() -> None:
+    page_header("Dataset overview", "Charts calculated directly from your data. No AI is used on this page.", "Dashboard")
+    dataset = st.session_state.get("dataset")
+    if not dataset:
+        show_empty_state("Upload a file, or try the sample dataset, to see its dashboard.")
+        return
+
+    show_kpis(dataset)
+    _, ask, remove = st.columns([4, 1, 1])
+    ask.button("Ask AI", icon=":material/auto_awesome:", on_click=go_to, args=("Ask AI",), type="primary", width="stretch")
+    remove.button("Remove dataset", on_click=remove_dataset, width="stretch")
+
+    charts = load_dashboard(dataset["dataset_id"])
+    if charts is None:
+        st.warning("The charts couldn't be loaded. Please refresh the page.")
+    else:
+        dataset_id = dataset["dataset_id"]
+        if charts["trend"]:
+            wide, narrow = st.columns([2, 1])
+            with wide:
+                show_trend_card(charts, dataset_id)
+            with narrow:
+                show_missing_card(charts, dataset_id)
+        else:
+            show_missing_card(charts, dataset_id)
+        left, right = st.columns(2)
+        if charts["categories"]:
+            with left:
+                show_category_card(charts, dataset_id)
+        if charts["histograms"]:
+            with right:
+                show_distribution_card(charts, dataset_id)
+
+    with st.container(border=True):
+        card_title("Data preview and columns")
+        preview, columns = st.tabs(["Preview", "Columns"])
+        with preview:
+            data = load_preview(dataset["dataset_id"])
+            if data is None:
+                st.warning("Couldn't load the preview.")
+            else:
+                st.caption(f"First {len(data['rows'])} of {data['total_rows']:,} rows")
+                st.dataframe(pd.DataFrame(data["rows"], columns=data["columns"]), hide_index=True, width="stretch")
+        with columns:
+            st.dataframe(columns_table(dataset["profile"]["columns"]), hide_index=True, width="stretch")
+
+
+# --- Ask AI page ---
+
+
+def suggested_questions(profile: dict) -> list[str]:
+    """Questions that fit this dataset's real columns."""
+    columns = profile["columns"]
+    numeric = [c["name"] for c in columns if c["kind"] == "numeric"]
+    categories = [c["name"] for c in columns if c["kind"] == "categorical"]
+    dated = any(c["kind"] == "datetime" for c in columns)
+    questions = []
+    if numeric and categories:
+        questions.append(f"Which {categories[0]} has the highest total {numeric[-1]}?")
+    if numeric and dated:
+        questions.append(f"How does total {numeric[0]} change by month?")
+    if numeric:
+        questions.append(f"Summarize {numeric[0]}: total, average, minimum, and maximum.")
+    questions.append("Check data quality: missing values and duplicate rows by column.")
+    return questions[:4]
 
 
 def steps_html(stage: str, finished: bool = False) -> str:
@@ -340,28 +642,32 @@ def wait_for_analysis(analysis_id: str) -> None:
 
 
 def show_question_box(dataset: dict) -> None:
-    section("Ask a question")
-    if st.button("Use the sample question"):
-        st.session_state.question = DEMO_QUESTION
+    ask, suggestions = st.columns([3, 2])
+    with ask, st.container(border=True):
+        card_title("Ask AI ✨", "AI writes the code. Python in the sandbox calculates every number.")
+        with st.form("ask", border=False):
+            question = st.text_area(
+                "Your question",
+                key="question",
+                height=110,
+                placeholder="For example: Which region has the highest revenue?",
+            )
+            history = st.session_state.get("history", [])
+            follow_up = st.checkbox("Follow up on my last question", value=bool(history), disabled=not history)
+            submitted = st.form_submit_button("Analyze", type="primary", icon=":material/send:")
 
-    with st.form("ask"):
-        question = st.text_area(
-            "Your question",
-            key="question",
-            height=100,
-            placeholder="For example: Which region has the highest revenue?",
-        )
-        history = st.session_state.get("history", [])
-        follow_up = st.checkbox("Follow up on my last question", value=bool(history), disabled=not history)
-        submitted = st.form_submit_button("Analyze", type="primary")
-
-    left = analyses_left_today()
-    if left is not None:
-        if left > 0:
-            st.caption(f"{left} free analyses left today, shared by all visitors. Each takes about a minute.")
-        else:
-            st.info("Today's free analyses have all been used. They reset at midnight UTC. You can still see the example.")
-    example_button("example-question")
+    with suggestions, st.container(border=True):
+        card_title("You may ask")
+        st.button("Use the sample question", key="suggest-sample", on_click=set_question, args=(DEMO_QUESTION,), width="stretch")
+        for index, text in enumerate(suggested_questions(dataset["profile"])):
+            st.button(plain(text), key=f"suggest-{index}", on_click=set_question, args=(text,), width="stretch")
+        left = analyses_left_today()
+        if left is not None:
+            if left > 0:
+                st.caption(f"{left} free analyses left today, shared by all visitors. Each takes about a minute.")
+            else:
+                st.info("Today's free analyses have all been used. They reset at midnight UTC. You can still see the example.")
+        example_button("example-question")
 
     if submitted:
         cleaned = question.strip()
@@ -390,65 +696,6 @@ def verification_badge(verification: dict | None) -> str:
     return f'<div class="dp-pill dp-pill-{status}">{text}</div>'
 
 
-def format_number(value: float | int, unit: str | None) -> str:
-    text = f"{value:,}" if isinstance(value, int) or float(value).is_integer() else f"{value:,.2f}"
-    return f"{text} {unit}" if unit else text
-
-
-def build_chart(chart: dict) -> go.Figure:
-    """Draw from plain values. Nothing from the sandbox is treated as code or HTML."""
-    x, y = chart["x"], chart["y"]
-    labels = [str(value) for value in x]
-    if chart["kind"] in ("bar", "pie"):
-        # Parts of a whole compare best as ranked bars, so pies are drawn this way too.
-        pairs = sorted(zip(labels, y), key=lambda pair: pair[1] if pair[1] is not None else 0)
-        trace = go.Bar(
-            x=[pair[1] for pair in pairs],
-            y=[pair[0] for pair in pairs],
-            orientation="h",
-            marker={"color": SERIES_COLOR, "cornerradius": 4},
-            hovertemplate="%{y}: %{x:,.2f}<extra></extra>",
-        )
-        x_title, y_title = chart["y_label"], chart["x_label"]
-    elif chart["kind"] == "line":
-        trace = go.Scatter(
-            x=labels,
-            y=y,
-            mode="lines+markers",
-            line={"color": SERIES_COLOR, "width": 2},
-            marker={"size": 8, "color": SERIES_COLOR},
-            hovertemplate="%{x}: %{y:,.2f}<extra></extra>",
-        )
-        x_title, y_title = chart["x_label"], chart["y_label"]
-    else:
-        trace = go.Scatter(
-            x=x,
-            y=y,
-            mode="markers",
-            marker={"size": 8, "color": SERIES_COLOR, "opacity": 0.75},
-            hovertemplate="%{x}, %{y:,.2f}<extra></extra>",
-        )
-        x_title, y_title = chart["x_label"], chart["y_label"]
-
-    figure = go.Figure(trace)
-    figure.update_layout(
-        title=chart.get("title") or chart["name"],
-        xaxis_title=x_title,
-        yaxis_title=y_title,
-        margin={"l": 12, "r": 16, "t": 52, "b": 12},
-        template="plotly_white",
-        paper_bgcolor="rgba(0,0,0,0)",
-        plot_bgcolor="rgba(0,0,0,0)",
-        font={"color": "#26324b"},
-        title_font={"size": 16, "color": "#111c33"},
-        height=max(320, 28 * len(labels) + 120) if chart["kind"] in ("bar", "pie") else 360,
-        showlegend=False,
-    )
-    figure.update_xaxes(automargin=True, gridcolor="#eef1f6", zeroline=False)
-    figure.update_yaxes(automargin=True, gridcolor="#eef1f6", zeroline=False)
-    return figure
-
-
 def number_formats(table: dict) -> dict:
     """Show numeric columns with thousands separators. The data itself isn't changed."""
     formats = {}
@@ -475,20 +722,31 @@ def show_key_figures(record: dict) -> None:
     metrics = record["result"]["metrics"]
     if not metrics:
         return
-    section("Key figures")
-    for start in range(0, len(metrics), 3):
-        row = st.columns(3)
-        for column, metric in zip(row, metrics[start : start + 3]):
+    for start in range(0, len(metrics), 4):
+        row = st.columns(4)
+        for column, metric in zip(row, metrics[start : start + 4]):
             column.metric(plain(metric["name"]), format_number(metric["value"], metric.get("unit")))
             with column:
                 show_html(verification_badge(verification_for(record, metric["name"], "metric")))
 
 
-def show_charts_and_tables(record: dict) -> None:
-    result = record["result"]
-    for chart in result["charts"]:
-        st.plotly_chart(build_chart(chart), width="stretch", key=f"chart-{record['analysis_id']}-{chart['name']}")
-    for index, table in enumerate(result["tables"]):
+def show_result_charts(record: dict) -> None:
+    charts = record["result"]["charts"]
+    if not charts:
+        return
+    section("Charts")
+    for start in range(0, len(charts), 2):
+        row = st.columns(2)
+        for column, chart in zip(row, charts[start : start + 2]):
+            with column, st.container(border=True):
+                plot(build_chart(chart), f"chart-{record['analysis_id']}-{chart['name']}")
+
+
+def show_tables(record: dict) -> None:
+    tables = record["result"]["tables"]
+    if not tables:
+        st.caption("This analysis has no tables.")
+    for index, table in enumerate(tables):
         section(safe_html(table["name"]))
         show_html(verification_badge(verification_for(record, table["name"], "table")))
         st.dataframe(
@@ -513,21 +771,24 @@ def show_insights(record: dict) -> None:
     if not insights:
         st.caption("No written explanation is available for this analysis.")
         return
+    observations, recommendations = st.columns([1, 1])
     if insights["observations"]:
-        section("What the data shows")
-        items = "".join(f"<li>{safe_html(text)}</li>" for text in insights["observations"])
-        show_html(f'<div class="dp-card"><ul class="dp-list">{items}</ul></div>')
+        with observations:
+            section("What the data shows")
+            items = "".join(f"<li>{safe_html(text)}</li>" for text in insights["observations"])
+            show_html(f'<div class="dp-card"><ul class="dp-list">{items}</ul></div>')
     if insights["recommendations"]:
-        section("Recommendations")
-        cards = "".join(
-            card(
-                safe_html(item["action"]),
-                f'<div class="dp-evidence">Evidence: {safe_html(item["evidence"])}</div>',
-                f"Action {number}",
+        with recommendations:
+            section("Recommendations")
+            cards = "".join(
+                card(
+                    safe_html(item["action"]),
+                    f'<div class="dp-evidence">Evidence: {safe_html(item["evidence"])}</div>',
+                    f"Action {number}",
+                )
+                for number, item in enumerate(insights["recommendations"], 1)
             )
-            for number, item in enumerate(insights["recommendations"], 1)
-        )
-        show_html(f'<div class="dp-grid">{cards}</div>')
+            show_html(f'<div class="dp-stack">{cards}</div>')
     if insights["assumptions"]:
         section("Assumptions")
         items = "".join(f"<li>{safe_html(text)}</li>" for text in insights["assumptions"])
@@ -583,15 +844,15 @@ def show_report_button(record: dict) -> None:
             mime="text/markdown",
             key=f"report-{record['analysis_id']}",
             type="primary",
+            icon=":material/download:",
         )
 
 
 def show_analysis(record: dict) -> None:
     st.divider()
-    section("Analysis")
     if str(record["analysis_id"]) == EXAMPLE_ID:
         st.info("This is a saved example: a real, verified analysis of the sample sales dataset.")
-    st.markdown(f"**Question:** {plain(record['question'])}")
+    show_html(f'<div class="dp-question"><span>Question</span>{safe_html(record["question"])}</div>')
 
     if record["status"] == "refused":
         st.warning(f"This dataset can't answer that question: {plain(record.get('message'))}")
@@ -607,11 +868,12 @@ def show_analysis(record: dict) -> None:
         show_html(steps_html("Finished", finished=True))
         show_summary(record)
         show_key_figures(record)
+        show_result_charts(record)
+        show_insights(record)
 
-    # Build the tabs for whichever parts exist.
     views = []
     if completed:
-        views += [("Insights", show_insights), ("Charts and tables", show_charts_and_tables)]
+        views.append(("Tables", show_tables))
     if record.get("plan"):
         views.append(("Analysis plan", show_plan))
     if record.get("code"):
@@ -626,13 +888,34 @@ def show_analysis(record: dict) -> None:
         show_report_button(record)
 
 
-def show_containment_lab() -> None:
-    section("Containment Lab")
-    st.markdown(
-        "Watch the sandbox stop real attacks. This runs fixed attack scripts in the real sandbox, on a tiny "
-        "made-up dataset. It takes about a minute, and uses no AI requests."
+def show_ask_page() -> None:
+    page_header("Ask AI", "Ask questions in plain English, and get verified answers with charts.", "AI analyst")
+    dataset = st.session_state.get("dataset")
+    if dataset:
+        show_question_box(dataset)
+    elif st.session_state.get("viewing") != EXAMPLE_ID:
+        show_empty_state("Upload a file to ask questions about it, or open the example analysis.")
+
+    viewing = st.session_state.get("viewing")
+    if viewing:
+        shown = load_analysis(viewing)
+        if shown:
+            show_analysis(shown)
+        else:
+            st.warning("That analysis couldn't be loaded. It may have expired.")
+
+
+# --- Containment Lab page ---
+
+
+def show_lab_page() -> None:
+    page_header(
+        "Containment Lab",
+        "Watch the sandbox stop real attacks. Fixed attack scripts run in the real sandbox on a tiny made-up "
+        "dataset. It takes about a minute, and uses no AI requests.",
+        "Security",
     )
-    if st.button("Run the attacks", type="primary"):
+    if st.button("Run the attacks", type="primary", icon=":material/bolt:"):
         with st.spinner("Attacking the sandbox..."):
             try:
                 response = httpx.post(LAB_URL, headers=visitor_headers(), timeout=LAB_TIMEOUT_SECONDS)
@@ -666,49 +949,29 @@ def show_containment_lab() -> None:
     show_html(f'<div class="dp-grid">{"".join(cards)}</div>')
 
 
-def show_sidebar() -> None:
-    history = st.session_state.get("history", [])
-    if not history:
-        return
-    with st.sidebar:
-        st.markdown("### This session")
-        for item in reversed(history):
-            label = item["question"][:40] + ("..." if len(item["question"]) > 40 else "")
-            if st.button(label, key=f"history-{item['analysis_id']}"):
-                st.session_state.viewing = item["analysis_id"]
+# --- Page ---
 
-
-st.set_page_config(page_title="DataPilot", page_icon="📊", layout="wide")
+st.set_page_config(
+    page_title="DataPilot",
+    page_icon=str(ASSETS / "favicon.png"),
+    layout="wide",
+    initial_sidebar_state="expanded",
+)
 show_html(f"<style>{STYLE_FILE.read_text(encoding='utf-8')}</style>")
 st.session_state.setdefault("history", [])
 
 healthy = backend_is_healthy()
-show_hero(healthy)
+show_sidebar(healthy)
 
 if healthy:
-    show_sidebar()
-    analyze_tab, lab_tab = st.tabs(["Analyze data", "Containment Lab"])
-    with analyze_tab:
-        if st.session_state.get("dataset"):
-            show_dataset(st.session_state.dataset)
-            show_question_box(st.session_state.dataset)
-            viewing = st.session_state.get("viewing")
-            if viewing:
-                shown = load_analysis(viewing)
-                if shown:
-                    show_analysis(shown)
-                else:
-                    st.warning("That analysis couldn't be loaded. It may have expired.")
-        else:
-            show_landing()
-            show_upload_section()
-            if st.session_state.get("viewing") == EXAMPLE_ID:
-                example = load_analysis(EXAMPLE_ID)
-                if example:
-                    show_analysis(example)
-                else:
-                    st.warning("The example isn't available right now.")
-    with lab_tab:
-        show_containment_lab()
+    page = current_page()
+    if page == "Dashboard":
+        show_dashboard_page()
+    elif page == "Upload data":
+        show_upload_page()
+    elif page == "Ask AI":
+        show_ask_page()
+    else:
+        show_lab_page()
 else:
     st.error(f"Can't reach the backend at {BACKEND_URL}. Is it running?")

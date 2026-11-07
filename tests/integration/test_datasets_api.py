@@ -208,3 +208,31 @@ def test_sample_dataset_matches_an_independent_calculation(client):
         "unit_price": "numeric",
         "region": "categorical",
     }
+
+
+def test_dashboard_charts_match_the_sample_data(client):
+    import csv
+    from collections import Counter
+
+    with SAMPLE.open(newline="", encoding="utf-8") as file:
+        rows = list(csv.DictReader(file))
+    dataset_id = upload(client, SAMPLE.read_bytes()).json()["dataset_id"]
+
+    charts = client.get(f"/api/v1/datasets/{dataset_id}/charts").json()
+
+    assert charts["date_column"] == "order_date"
+    months = Counter(row["order_date"][:7] for row in rows if row["order_date"])
+    trend = charts["trend"]["Number of rows"]
+    assert dict(zip(trend["labels"], trend["values"])) == months
+    products = Counter(row["product"] for row in rows if row["product"])
+    top = charts["categories"]["product"]["Number of rows"]
+    assert dict(zip(top["labels"], top["values"])) == dict(products.most_common(10))
+    quantity_total = sum(float(row["quantity"]) for row in rows if row["quantity"] and row["product"] == "Laptop")
+    by_quantity = charts["categories"]["product"]["Total quantity"]
+    assert dict(zip(by_quantity["labels"], by_quantity["values"]))["Laptop"] == quantity_total
+    assert sum(charts["histograms"]["quantity"]["counts"]) == sum(1 for row in rows if row["quantity"])
+    assert dict(zip(charts["missing"]["labels"], charts["missing"]["values"]))["quantity"] == 11
+
+
+def test_dashboard_for_unknown_dataset_is_404(client):
+    assert client.get(f"/api/v1/datasets/{uuid4()}/charts").status_code == 404

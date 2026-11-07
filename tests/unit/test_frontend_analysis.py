@@ -271,6 +271,7 @@ def test_second_question_can_follow_up_on_the_first(run_page):
 def test_containment_lab_shows_results(run_page, monkeypatch):
     backend = FakeBackend()
     page = run_page(backend, analyze=False)
+    next(b for b in page.sidebar.button if b.label == "Containment Lab").click().run()
     report = {
         "all_contained": True,
         "results": [
@@ -320,3 +321,56 @@ def test_apostrophes_in_ai_text_are_encoded_once(run_page):
     assert "server&#39;s" in shown
     assert "&#38; more" in shown
     assert "&#35;" not in shown  # Double encoding is what displayed "server&#x27;s".
+
+
+CHARTS = {
+    "date_column": "order_date",
+    "trend": {"Number of rows": {"labels": ["2025-01", "2025-02"], "values": [10, 12]}},
+    "categories": {"product": {"Number of rows": {"labels": ["Pen", "Book"], "values": [7, 5]}}},
+    "histograms": {"a": {"labels": ["0 – 1", "1 – 2"], "counts": [3, 4]}},
+    "missing": {"labels": ["a"], "values": [0]},
+}
+
+
+def test_dashboard_shows_charts_from_the_backend(run_page, monkeypatch):
+    backend = FakeBackend()
+
+    def get(url, **kwargs):
+        if url.endswith("/charts"):
+            return Mock(status_code=200, json=lambda: CHARTS)
+        return backend.get(url, **kwargs)
+
+    monkeypatch.setattr(httpx, "get", get)
+    page = AppTest.from_file(APP_PATH, default_timeout=20)
+    page.session_state["dataset"] = DATASET
+    page.session_state["page"] = "Dashboard"
+    page.run()
+
+    assert not page.exception
+    assert {metric.label for metric in page.metric} == {"Rows", "Columns", "Missing values", "Duplicate rows"}
+    assert len(page.get("plotly_chart")) == 3  # Trend, top categories, distribution.
+    assert any("No missing values" in item.value for item in page.markdown)
+
+
+def test_sidebar_navigation_switches_pages(run_page):
+    page = run_page(FakeBackend(), analyze=False)
+
+    next(b for b in page.sidebar.button if b.label == "Upload data").click().run()
+
+    assert any("Upload Your Data" in item.value for item in page.markdown)
+    assert not page.exception
+
+
+def test_suggested_questions_fill_the_question_box(run_page):
+    page = run_page(FakeBackend(), analyze=False)
+
+    suggestion = next(b for b in page.button if "data quality" in b.label)
+    suggestion.click().run()
+
+    assert "missing values" in page.text_area(key="question").value
+
+
+def test_result_charts_are_shown_without_opening_a_tab(run_page):
+    page = run_page(FakeBackend())
+
+    assert len(page.get("plotly_chart")) == 4
