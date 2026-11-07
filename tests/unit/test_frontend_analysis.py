@@ -125,9 +125,10 @@ def test_completed_analysis_shows_results_verification_and_insights(run_page):
 
     assert not page.exception
     assert any("1,234.50" == metric.value for metric in page.metric)
-    assert any("1 of 2 results" in item.value for item in page.success)
-    assert any("✅ Verified" in item.value for item in page.markdown)
-    assert any("Not independently checked" in item.value for item in page.markdown)
+    assert any("1 of 2 figures were recalculated" in item.value for item in page.markdown)
+    assert any(">Verified<" in item.value and "sum&#40;a&#41;" in item.value for item in page.markdown)
+    assert not any("Not independently checked" in item.value for item in page.markdown)
+    assert not page.success  # No large green banner.
     assert any("Promote pens" in item.value for item in page.markdown)
     assert any("don't prove" in item.value for item in page.info)
     assert any("1 AI statement" in item.value for item in page.caption)
@@ -374,3 +375,21 @@ def test_result_charts_are_shown_without_opening_a_tab(run_page):
     page = run_page(FakeBackend())
 
     assert len(page.get("plotly_chart")) == 4
+
+
+def test_shares_are_shown_as_percentages(run_page):
+    metrics = [{"name": "Top five revenue share", "value": 0.7728, "unit": None, "check": None}]
+    record = {**COMPLETED, "result": {**COMPLETED["result"], "metrics": metrics}}
+
+    page = run_page(FakeBackend(record))
+
+    assert any(metric.value == "77.3%" for metric in page.metric)
+
+
+def test_no_emoji_or_tick_marks_on_the_page(run_page):
+    import re
+
+    page = run_page(FakeBackend())
+    text = " ".join(item.value for item in [*page.markdown, *page.caption])
+
+    assert not re.search("[\u2600-\u27BF\U0001F300-\U0001FAFF\u25CF]", text)

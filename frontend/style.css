@@ -97,7 +97,17 @@ html, body, .stApp {
 .stTabs [data-baseweb="tab-list"] { gap: 6px; }
 .stTabs [data-baseweb="tab"] { font-weight: 600; }
 
-/* --- Verification labels --- */
+/* --- Verification labels: discreet, with details on hover --- */
+.dp-verify { display: inline-flex; align-items: center; gap: 6px; font-size: .76rem; font-weight: 600; color: #3f7d5a; margin: 6px 0 10px; cursor: help; }
+.dp-verify::before { content: ""; width: 6px; height: 6px; border-radius: 50%; background: #22a35a; }
+.dp-verify-bad { color: #a11d1d; }
+.dp-verify-bad::before { background: #dc2626; }
+.dp-verify-summary { color: #6b7488; font-size: .86rem; margin: 6px 0 14px; }
+.dp-progress { height: 8px; background: #e6eaf2; border-radius: 999px; overflow: hidden; margin: 14px 0 8px; }
+.dp-progress-bar { height: 100%; background: linear-gradient(90deg, #2563eb, #60a5fa); border-radius: 999px; transition: width .4s ease; }
+.dp-progress-labels { display: flex; justify-content: space-between; gap: 8px; font-size: .82rem; color: #9aa3b5; font-weight: 600; }
+.dp-step-on { color: #2563eb; }
+.dp-file-icon, .dp-source-icon svg { display: inline-flex; vertical-align: middle; }
 .dp-pill { display: inline-block; border-radius: 999px; padding: 3px 11px; font-size: .78rem; font-weight: 600; margin: 6px 0 10px; }
 .dp-pill-verified { background: #e3f7ec; color: #11693b; }
 .dp-pill-mismatch { background: #fde8e8; color: #a11d1d; }

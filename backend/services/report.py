@@ -3,8 +3,8 @@
 from backend.schemas.analysis import AnalysisRecord, SandboxTable, Verification
 
 STATUS_LABELS = {
-    "verified": "Verified ✓",
-    "mismatch": "Mismatch ✗",
+    "verified": "Verified",
+    "mismatch": "Mismatch",
     "not_checked": "Not independently checked",
 }
 CAVEAT = "These findings show patterns in this dataset. They don't prove what caused them."

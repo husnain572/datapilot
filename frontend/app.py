@@ -36,11 +36,13 @@ DEMO_QUESTION = (
 )
 CAVEAT = "These findings show patterns in this dataset. They don't prove what caused them."
 UNSAFE_HTML_CHARACTERS = set("&<>\"'\\`*_{}[]()#+-.!|~$:")
-VERIFICATION_LABELS = {
-    "verified": "✅ Verified",
-    "mismatch": "❌ Mismatch",
-    "not_checked": "➖ Not independently checked",
-}
+# Simple line icons, drawn by us, so the page needs no icon files or emoji.
+ICON_UPLOAD = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M12 16V4"/><path d="M7 9l5-5 5 5"/><path d="M4 16v3a1 1 0 0 0 1 1h14a1 1 0 0 0 1-1v-3"/></svg>'
+ICON_TABLE = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="16" rx="2"/><path d="M3 10h18M9 4v16"/></svg>'
+ICON_REPORT = '<svg viewBox="0 0 24 24" width="22" height="22" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15H6z"/><path d="M9 13h6M9 17h6M9 9h3"/></svg>'
+ICON_FILE = '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M6 3h9l3 3v15H6z"/></svg>'
+# Words that mark a figure as a share of a whole, so 0.773 can be shown as 77.3%.
+SHARE_WORDS = ("share", "percent", "proportion", "ratio", "rate")
 # Progress steps, and the start of the backend's stage message for each.
 STEPS = [
     ("Plan and write code", "Planning"),
@@ -52,7 +54,7 @@ STEPS = [
 PAGES = [
     ("Upload data", ":material/upload_file:"),
     ("Dashboard", ":material/space_dashboard:"),
-    ("Ask AI", ":material/auto_awesome:"),
+    ("Ask a question", ":material/chat:"),
 ]
 # Shown as a small link at the bottom of the sidebar, not in the main menu.
 SECURITY_PAGE = "Security"
@@ -234,7 +236,7 @@ def current_page() -> str:
     page = st.session_state.get("page")
     if page in [name for name, _ in PAGES] + [SECURITY_PAGE]:
         return page
-    return "Ask AI" if st.session_state.get("dataset") else "Upload data"
+    return "Ask a question" if st.session_state.get("dataset") else "Upload data"
 
 
 def go_to(page: str) -> None:
@@ -244,7 +246,7 @@ def go_to(page: str) -> None:
 def open_example() -> None:
     """A saved, real analysis of the sample data. It appears instantly and uses no AI requests."""
     st.session_state.viewing = EXAMPLE_ID
-    st.session_state.page = "Ask AI"
+    st.session_state.page = "Ask a question"
 
 
 def set_question(question: str) -> None:
@@ -266,7 +268,7 @@ def show_sidebar() -> None:
     with st.sidebar:
         show_html(
             f'<div class="dp-logo"><img src="{image_data(ASSETS / "logo.png")}" alt="">'
-            '<div><div class="dp-logo-name">DataPilot</div><div class="dp-logo-tag">Verifiable AI analyst</div></div></div>'
+            '<div><div class="dp-logo-name">DataPilot</div><div class="dp-logo-tag">Analytics you can verify</div></div></div>'
         )
         show_html('<div class="dp-nav-label">Menu</div>')
         for name, icon in PAGES:
@@ -287,7 +289,7 @@ def show_sidebar() -> None:
                 label = item["question"][:38] + ("..." if len(item["question"]) > 38 else "")
                 if st.button(plain(label), key=f"history-{item['analysis_id']}", width="stretch"):
                     st.session_state.viewing = item["analysis_id"]
-                    st.session_state.page = "Ask AI"
+                    st.session_state.page = "Ask a question"
 
         show_html('<div class="dp-side-spacer"></div>')
         st.button(
@@ -311,7 +313,7 @@ def page_header(title: str, subtitle: str, label: str = "") -> None:
     with right:
         if dataset:
             show_html(
-                f'<div class="dp-file-chip"><span class="dp-file-icon">📄</span>'
+                f'<div class="dp-file-chip"><span class="dp-file-icon">{ICON_FILE}</span>'
                 f'<span>{safe_html(dataset["filename"])}</span>'
                 f'<span class="dp-file-meta">{dataset["profile"]["row_count"]:,} rows</span></div>'
             )
@@ -420,8 +422,8 @@ def show_upload_page() -> None:
     show_html(
         '<div class="dp-upload-hero"><div class="dp-badge">Data Upload Center</div>'
         '<div class="dp-upload-title">Upload Your Data</div>'
-        '<div class="dp-page-subtitle">Upload a data file for AI analysis. Your data is checked, profiled, and analyzed '
-        "with code that runs in a locked-down sandbox. Files are deleted after 24 hours.</div></div>"
+        '<div class="dp-page-subtitle">Upload a data file to explore and analyze it. Every figure is calculated from '
+        "your data by code that runs in a locked-down environment. Files are deleted after 24 hours.</div></div>"
     )
 
     with st.container(border=True):
@@ -429,18 +431,18 @@ def show_upload_page() -> None:
         local, sample, example = st.columns(3)
         with local:
             show_html(
-                '<div class="dp-source dp-source-active"><div class="dp-source-icon">⬆</div>'
+                f'<div class="dp-source dp-source-active"><div class="dp-source-icon">{ICON_UPLOAD}</div>'
                 '<div class="dp-source-name">Local file</div><div class="dp-source-text">Use the upload box below</div></div>'
             )
         with sample:
             show_html(
-                '<div class="dp-source"><div class="dp-source-icon">📊</div><div class="dp-source-name">Sample dataset</div>'
+                f'<div class="dp-source"><div class="dp-source-icon">{ICON_TABLE}</div><div class="dp-source-name">Sample dataset</div>'
                 '<div class="dp-source-text">1,010 made-up sales records</div></div>'
             )
             sample_clicked = st.button("Try the sample sales dataset", width="stretch")
         with example:
             show_html(
-                '<div class="dp-source"><div class="dp-source-icon">✨</div><div class="dp-source-name">Example analysis</div>'
+                f'<div class="dp-source"><div class="dp-source-icon">{ICON_REPORT}</div><div class="dp-source-name">Example analysis</div>'
                 '<div class="dp-source-text">A finished, verified result</div></div>'
             )
             example_button("example-upload")
@@ -539,13 +541,13 @@ def show_missing_card(charts: dict, dataset_id: str) -> None:
         card_title("Missing values", "Blank cells in each column")
         missing = charts["missing"]
         if not any(missing["values"]):
-            show_html('<div class="dp-good">✓ No missing values</div>')
+            show_html('<div class="dp-good">No missing values</div>')
         else:
             plot(ranked_bars(missing["labels"], missing["values"], "Blank cells", height=330), f"missing-{dataset_id}")
 
 
 def show_dashboard_page() -> None:
-    page_header("Dataset overview", "Charts calculated directly from your data. No AI is used on this page.", "Dashboard")
+    page_header("Dataset overview", "Charts calculated directly from your data.")
     dataset = st.session_state.get("dataset")
     if not dataset:
         show_empty_state("Upload a file, or try the sample dataset, to see its dashboard.")
@@ -553,7 +555,7 @@ def show_dashboard_page() -> None:
 
     show_kpis(dataset)
     _, ask, remove = st.columns([4, 1, 1])
-    ask.button("Ask AI", icon=":material/auto_awesome:", on_click=go_to, args=("Ask AI",), type="primary", width="stretch")
+    ask.button("Ask a question", icon=":material/chat:", on_click=go_to, args=("Ask a question",), type="primary", width="stretch")
     remove.button("Remove dataset", on_click=remove_dataset, width="stretch")
 
     charts = load_dashboard(dataset["dataset_id"])
@@ -611,17 +613,18 @@ def suggested_questions(profile: dict) -> list[str]:
     return questions[:4]
 
 
-def steps_html(stage: str, finished: bool = False) -> str:
-    current = next((index for index, (_, prefix) in enumerate(STEPS) if stage.startswith(prefix)), None)
-    items = []
-    for index, (label, _) in enumerate(STEPS):
-        if finished or (current is not None and index < current):
-            items.append(f'<div class="dp-step dp-step-done">✓ {label}</div>')
-        elif index == current:
-            items.append(f'<div class="dp-step dp-step-active">● {label}</div>')
-        else:
-            items.append(f'<div class="dp-step">{label}</div>')
-    return f'<div class="dp-steps">{"".join(items)}</div><div class="dp-step-note">{safe_html(stage)}</div>'
+def steps_html(stage: str) -> str:
+    """A progress bar with the step names, shown only while an analysis runs."""
+    current = next((index for index, (_, prefix) in enumerate(STEPS) if stage.startswith(prefix)), 0)
+    percent = int((current + 0.5) / len(STEPS) * 100)
+    labels = "".join(
+        f'<span class="{"dp-step-on" if index <= current else ""}">{label}</span>'
+        for index, (label, _) in enumerate(STEPS)
+    )
+    return (
+        f'<div class="dp-progress"><div class="dp-progress-bar" style="width:{percent}%"></div></div>'
+        f'<div class="dp-progress-labels">{labels}</div>'
+    )
 
 
 def wait_for_analysis(analysis_id: str) -> None:
@@ -633,11 +636,11 @@ def wait_for_analysis(analysis_id: str) -> None:
     while time.monotonic() < deadline:
         record = load_analysis(analysis_id)
         if record is not None:
-            done = record["status"] == "completed"
-            tracker.markdown(steps_html(record["stage"], finished=done), unsafe_allow_html=True)
+            tracker.markdown(steps_html(record["stage"]), unsafe_allow_html=True)
             if record["status"] in ("completed", "failed", "refused"):
                 break
         time.sleep(POLL_SECONDS)
+    tracker.empty()
     st.session_state.history.append({"analysis_id": analysis_id, "question": record["question"] if record else ""})
     st.session_state.viewing = analysis_id
 
@@ -645,7 +648,7 @@ def wait_for_analysis(analysis_id: str) -> None:
 def show_question_box(dataset: dict) -> None:
     ask, suggestions = st.columns([3, 2])
     with ask, st.container(border=True):
-        card_title("Ask AI ✨", "AI writes the code. Python in the sandbox calculates every number.")
+        card_title("Your question", "Ask in plain English. Every figure is calculated from your data.")
         with st.form("ask", border=False):
             question = st.text_area(
                 "Your question",
@@ -658,7 +661,7 @@ def show_question_box(dataset: dict) -> None:
             submitted = st.form_submit_button("Analyze", type="primary", icon=":material/send:")
 
     with suggestions, st.container(border=True):
-        card_title("You may ask")
+        card_title("Suggested questions")
         st.button("Use the sample question", key="suggest-sample", on_click=set_question, args=(DEMO_QUESTION,), width="stretch")
         for index, text in enumerate(suggested_questions(dataset["profile"])):
             st.button(plain(text), key=f"suggest-{index}", on_click=set_question, args=(text,), width="stretch")
@@ -686,11 +689,22 @@ def verification_for(record: dict, name: str, target_type: str) -> dict | None:
 
 
 def verification_badge(verification: dict | None) -> str:
-    status = verification["status"] if verification else "not_checked"
-    text = VERIFICATION_LABELS[status]
-    if verification and verification.get("formula"):
-        text += f": {safe_html(verification['formula'])}"
-    return f'<div class="dp-pill dp-pill-{status}">{text}</div>'
+    """A discreet label. The formula shows on hover. Unchecked figures get no label at all."""
+    if not verification or verification["status"] == "not_checked":
+        return ""
+    formula = safe_html(verification.get("formula") or "")
+    if verification["status"] == "mismatch":
+        return f'<div class="dp-verify dp-verify-bad" title="Recalculated as {formula}">Recalculation mismatch</div>'
+    return f'<div class="dp-verify" title="Recalculated independently as {formula}">Verified</div>'
+
+
+def display_value(metric: dict) -> str:
+    """Format a figure for reading. A share between 0 and 1 is shown as a percentage."""
+    value, name = metric["value"], metric["name"].lower()
+    is_share = any(word in name for word in SHARE_WORDS) and not metric.get("unit")
+    if is_share and isinstance(value, float) and 0 <= value <= 1:
+        return f"{value * 100:.1f}%"
+    return format_number(value, metric.get("unit"))
 
 
 def number_formats(table: dict) -> dict:
@@ -704,15 +718,17 @@ def number_formats(table: dict) -> dict:
 
 
 def show_summary(record: dict) -> None:
+    """One quiet line. Only a problem gets a prominent warning."""
     checks = record["verifications"]
     verified = sum(v["status"] == "verified" for v in checks)
     mismatched = sum(v["status"] == "mismatch" for v in checks)
-    if not checks:
-        return
     if mismatched:
         st.error(f"{mismatched} of {len(checks)} results failed independent recalculation.")
-    else:
-        st.success(f"{verified} of {len(checks)} results were independently recalculated and match.")
+    elif verified:
+        show_html(
+            f'<div class="dp-verify-summary">{verified} of {len(checks)} figures were recalculated independently '
+            "and match. Hover over a figure's label to see how it was checked.</div>"
+        )
 
 
 def show_key_figures(record: dict) -> None:
@@ -722,7 +738,7 @@ def show_key_figures(record: dict) -> None:
     for start in range(0, len(metrics), 4):
         row = st.columns(4)
         for column, metric in zip(row, metrics[start : start + 4]):
-            column.metric(plain(metric["name"]), format_number(metric["value"], metric.get("unit")))
+            column.metric(plain(metric["name"]), display_value(metric))
             with column:
                 show_html(verification_badge(verification_for(record, metric["name"], "metric")))
 
@@ -862,7 +878,6 @@ def show_analysis(record: dict) -> None:
     if completed:
         if record.get("message"):
             st.warning(plain(record["message"]))
-        show_html(steps_html("Finished", finished=True))
         show_summary(record)
         show_key_figures(record)
         show_result_charts(record)
@@ -886,7 +901,7 @@ def show_analysis(record: dict) -> None:
 
 
 def show_ask_page() -> None:
-    page_header("Ask AI", "Ask questions in plain English, and get verified answers with charts.", "AI analyst")
+    page_header("Ask a question", "Get answers with charts and recommendations. Every figure is calculated from your data.")
     dataset = st.session_state.get("dataset")
     if dataset:
         show_question_box(dataset)
@@ -908,10 +923,9 @@ def show_ask_page() -> None:
 def show_lab_page() -> None:
     page_header(
         "How your data is protected",
-        "AI-written code never runs on our servers directly. Each analysis runs in a sealed, throwaway container "
+        "Analysis code never runs on our servers directly. Each analysis runs in a sealed, throwaway container "
         "with no internet, no secrets, and strict limits. Run real attacks against it to see for yourself. "
         "It takes about a minute.",
-        "Security",
     )
     show_html(
         '<div class="dp-grid">'
@@ -942,9 +956,9 @@ def show_lab_page() -> None:
     cards = []
     for item in report["results"]:
         result = (
-            '<div class="dp-attack-result dp-contained">✓ Contained</div>'
+            '<div class="dp-attack-result dp-contained">Contained</div>'
             if item["contained"]
-            else '<div class="dp-attack-result dp-breached">✗ Not contained</div>'
+            else '<div class="dp-attack-result dp-breached">Not contained</div>'
         )
         body = (
             f"{safe_html(item['attack'])}{result}"
@@ -973,7 +987,7 @@ if backend_is_healthy():
         show_dashboard_page()
     elif page == "Upload data":
         show_upload_page()
-    elif page == "Ask AI":
+    elif page == "Ask a question":
         show_ask_page()
     else:
         show_lab_page()

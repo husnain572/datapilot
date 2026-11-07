@@ -426,7 +426,7 @@ def test_api_runs_an_analysis_and_serves_its_report(api):
     report = client.get(f"/api/v1/analyses/{analysis_id}/report")
     assert report.status_code == 200
     assert "Total revenue" in report.text
-    assert "Verified ✓" in report.text
+    assert "Verified (" in report.text
     assert "sum(quantity × unit_price)" in report.text
     assert "don't prove" in report.text
     assert CODE in report.text
@@ -516,7 +516,7 @@ def test_saved_example_is_served_without_any_ai(api, monkeypatch, tmp_path):
 
     assert served.status_code == by_id.status_code == report.status_code == 200
     assert by_id.json()["result"]["metrics"][0]["value"] == 35
-    assert "Verified ✓" in report.text
+    assert "Verified (" in report.text
     assert scripted["ai"].requests == []
 
 
