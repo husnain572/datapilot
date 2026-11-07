@@ -12,6 +12,8 @@ import pandas as pd
 from backend.schemas.analysis import MetricCheck, SandboxResult, SandboxTable, TableCheck, Verification
 
 RELATIVE_TOLERANCE = 1e-6
+# How blank group names show up in tables. These rows are skipped, not treated as errors.
+BLANK_LABELS = {"", "none", "nan", "nat", "null", "<na>"}
 ABSOLUTE_TOLERANCE = 1e-6
 
 
@@ -124,15 +126,21 @@ def verify_table(df: pd.DataFrame, table: SandboxTable) -> Verification:
     frame = pd.Series([row[key_index] for row in table.rows], dtype="object")
     reported_keys = _group_key(frame, check.time_grain)
 
+    checked = 0
     for position, row in enumerate(table.rows):
         key = reported_keys.iloc[position]
         value = row[value_index]
+        if row[key_index] is None or str(row[key_index]).strip().lower() in BLANK_LABELS:
+            continue  # A row for blank groups (like orders with no region) is fine, but can't be recalculated.
+        checked += 1
         if key is None or key not in expected:
             return mismatch(f"Row {position + 1}: '{row[key_index]}' isn't a group in the data.")
         if isinstance(value, bool) or not isinstance(value, (int, float)):
             return mismatch(f"Row {position + 1}: the value isn't a number.")
         if not _matches(value, expected[key]):
             return mismatch(f"'{key}': reported {value}, but recalculated {expected[key]}.")
+    if checked == 0:
+        return mismatch("The table has no rows that can be checked.")
     return Verification(target=table.name, target_type="table", status="verified", formula=formula)
 
 

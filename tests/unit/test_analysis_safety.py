@@ -330,3 +330,16 @@ def test_claims_with_invented_numbers_are_removed_and_counted():
     assert [r.action for r in cleaned.recommendations] == ["Stock more of the top seller."]
     assert len(removed) == 2
     assert find_invented(cleaned, RESULT) == []
+
+
+@pytest.mark.parametrize("blank", [None, "None", "nan", ""])
+def test_a_row_for_blank_groups_is_skipped_not_failed(blank):
+    df = DF.assign(product=["Pen", "Pen", "Book", None, None])
+
+    outcome = verify_table(df, table_of([["Pen", 50], ["Book", 5], [blank, 0]], BY_PRODUCT))
+
+    assert outcome.status == "verified"
+
+
+def test_a_table_of_only_blank_groups_cannot_be_verified():
+    assert verify_table(DF, table_of([[None, 0]], BY_PRODUCT)).status == "mismatch"
