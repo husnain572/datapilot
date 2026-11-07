@@ -48,13 +48,14 @@ STEPS = [
     ("Verify results", "Validating"),
     ("Explain findings", "Explaining"),
 ]
-# Page name, icon, and the short description under it in the sidebar.
+# The main menu, in the order people use it.
 PAGES = [
-    ("Dashboard", ":material/space_dashboard:"),
     ("Upload data", ":material/upload_file:"),
+    ("Dashboard", ":material/space_dashboard:"),
     ("Ask AI", ":material/auto_awesome:"),
-    ("Containment Lab", ":material/shield_lock:"),
 ]
+# Shown as a small link at the bottom of the sidebar, not in the main menu.
+SECURITY_PAGE = "Security"
 
 
 # --- Safe text and small building blocks ---
@@ -231,7 +232,7 @@ def start_analysis(dataset_id: str, question: str, parent_id: str | None) -> str
 
 def current_page() -> str:
     page = st.session_state.get("page")
-    if page in [name for name, _ in PAGES]:
+    if page in [name for name, _ in PAGES] + [SECURITY_PAGE]:
         return page
     return "Ask AI" if st.session_state.get("dataset") else "Upload data"
 
@@ -260,7 +261,7 @@ def example_button(key: str) -> None:
     )
 
 
-def show_sidebar(healthy: bool) -> None:
+def show_sidebar() -> None:
     page = current_page()
     with st.sidebar:
         show_html(
@@ -279,13 +280,6 @@ def show_sidebar(healthy: bool) -> None:
                 width="stretch",
             )
 
-        left = analyses_left_today()
-        if left is not None:
-            show_html(
-                f'<div class="dp-side-card"><div class="dp-side-number">{left}</div>'
-                '<div class="dp-side-text">free AI analyses left today, shared by all visitors</div></div>'
-            )
-
         history = st.session_state.get("history", [])
         if history:
             show_html('<div class="dp-nav-label">This session</div>')
@@ -295,8 +289,17 @@ def show_sidebar(healthy: bool) -> None:
                     st.session_state.viewing = item["analysis_id"]
                     st.session_state.page = "Ask AI"
 
-        status = '<span class="dp-dot"></span>Backend connected' if healthy else '<span class="dp-dot dp-dot-off"></span>Backend unavailable'
-        show_html(f'<div class="dp-side-status">{status}</div>')
+        show_html('<div class="dp-side-spacer"></div>')
+        st.button(
+            "Security",
+            icon=":material/verified_user:",
+            key="nav-security",
+            type="primary" if page == SECURITY_PAGE else "tertiary",
+            on_click=go_to,
+            args=(SECURITY_PAGE,),
+            width="stretch",
+            help="See how DataPilot keeps generated code locked away from your data and our servers.",
+        )
 
 
 def page_header(title: str, subtitle: str, label: str = "") -> None:
@@ -659,12 +662,8 @@ def show_question_box(dataset: dict) -> None:
         st.button("Use the sample question", key="suggest-sample", on_click=set_question, args=(DEMO_QUESTION,), width="stretch")
         for index, text in enumerate(suggested_questions(dataset["profile"])):
             st.button(plain(text), key=f"suggest-{index}", on_click=set_question, args=(text,), width="stretch")
-        left = analyses_left_today()
-        if left is not None:
-            if left > 0:
-                st.caption(f"{left} free analyses left today, shared by all visitors. Each takes about a minute.")
-            else:
-                st.info("Today's free analyses have all been used. They reset at midnight UTC. You can still see the example.")
+        if analyses_left_today() == 0:
+            st.info("Today's analysis limit has been reached. It resets at midnight UTC. You can still see the example.")
         example_button("example-question")
 
     if submitted:
@@ -908,10 +907,18 @@ def show_ask_page() -> None:
 
 def show_lab_page() -> None:
     page_header(
-        "Containment Lab",
-        "Watch the sandbox stop real attacks. Fixed attack scripts run in the real sandbox on a tiny made-up "
-        "dataset. It takes about a minute, and uses no AI requests.",
+        "How your data is protected",
+        "AI-written code never runs on our servers directly. Each analysis runs in a sealed, throwaway container "
+        "with no internet, no secrets, and strict limits. Run real attacks against it to see for yourself. "
+        "It takes about a minute.",
         "Security",
+    )
+    show_html(
+        '<div class="dp-grid">'
+        + card("No internet", "Code can't send your data anywhere.", "Sealed")
+        + card("No secrets", "API keys and passwords never enter the container.", "Isolated")
+        + card("Strict limits", "Time, memory, and processes are capped, then the container is destroyed.", "Disposable")
+        + "</div>"
     )
     if st.button("Run the attacks", type="primary", icon=":material/bolt:"):
         with st.spinner("Attacking the sandbox..."):
@@ -958,10 +965,9 @@ st.set_page_config(
 show_html(f"<style>{STYLE_FILE.read_text(encoding='utf-8')}</style>")
 st.session_state.setdefault("history", [])
 
-healthy = backend_is_healthy()
-show_sidebar(healthy)
+show_sidebar()
 
-if healthy:
+if backend_is_healthy():
     page = current_page()
     if page == "Dashboard":
         show_dashboard_page()
@@ -972,4 +978,4 @@ if healthy:
     else:
         show_lab_page()
 else:
-    st.error(f"Can't reach the backend at {BACKEND_URL}. Is it running?")
+    st.error("DataPilot is temporarily unavailable. Please try again in a minute.")

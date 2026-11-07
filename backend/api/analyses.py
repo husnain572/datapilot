@@ -133,8 +133,8 @@ def create_analysis(
     if analyses_left_today(settings, usage_tracker(settings)) < 1:
         raise HTTPException(
             status.HTTP_429_TOO_MANY_REQUESTS,
-            "Today's free analyses have all been used. They reset at midnight UTC. "
-            "You can still see the example analysis and run the Containment Lab.",
+            "Today's analysis limit has been reached. It resets at midnight UTC. "
+            "You can still see the example analysis.",
         )
     check_visitor(settings, visitor, "analysis", settings.visitor_analyses_per_hour)
 

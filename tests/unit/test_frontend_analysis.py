@@ -167,10 +167,10 @@ def test_limit_message_from_the_backend_is_shown(run_page):
     assert not any(metric.label == "Total revenue" for metric in page.metric)
 
 
-def test_analyses_left_today_is_shown(run_page):
+def test_usage_counts_are_not_shown_to_users(run_page):
     page = run_page(FakeBackend(), analyze=False)
 
-    assert any("5 free analyses left today" in item.value for item in page.caption)
+    assert not any("analyses left" in item.value for item in [*page.caption, *page.markdown])
 
 
 def test_no_analyses_left_shows_a_clear_message(run_page):
@@ -179,7 +179,7 @@ def test_no_analyses_left_shows_a_clear_message(run_page):
 
     page = run_page(backend, analyze=False)
 
-    assert any("have all been used" in item.value for item in page.info)
+    assert any("analysis limit has been reached" in item.value for item in page.info)
 
 
 def test_example_button_shows_the_saved_example(run_page):
@@ -271,7 +271,7 @@ def test_second_question_can_follow_up_on_the_first(run_page):
 def test_containment_lab_shows_results(run_page, monkeypatch):
     backend = FakeBackend()
     page = run_page(backend, analyze=False)
-    next(b for b in page.sidebar.button if b.label == "Containment Lab").click().run()
+    next(b for b in page.sidebar.button if b.label == "Security").click().run()
     report = {
         "all_contained": True,
         "results": [

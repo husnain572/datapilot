@@ -29,7 +29,8 @@ html, body, .stApp {
 .dp-side-card { margin-top: 18px; background: linear-gradient(135deg, #eef3ff, #f7f9ff); border: 1px solid #dfe7fb; border-radius: 14px; padding: 14px 16px; }
 .dp-side-number { font-size: 1.7rem; font-weight: 780; color: #2563eb; line-height: 1.1; }
 .dp-side-text { font-size: .82rem; color: #4a5670; margin-top: 2px; }
-.dp-side-status { margin-top: 22px; font-size: .8rem; color: #4a5670; }
+.dp-side-spacer { height: 28px; border-bottom: 1px solid #eef1f6; margin-bottom: 10px; }
+[data-testid="stSidebar"] [data-testid="stBaseButton-tertiary"] { color: #5d6880; font-weight: 600; }
 .dp-dot { display: inline-block; width: 8px; height: 8px; border-radius: 50%; background: #22c55e; margin-right: 7px; }
 .dp-dot-off { background: #ef4444; }
 

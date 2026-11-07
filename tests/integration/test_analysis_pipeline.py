@@ -487,7 +487,7 @@ def test_analysis_is_refused_when_the_daily_allowance_is_nearly_gone(api, tmp_pa
     response = ask(client, upload(client))
 
     assert response.status_code == 429
-    assert "reset at midnight UTC" in response.json()["detail"]
+    assert "resets at midnight UTC" in response.json()["detail"]
     assert scripted["ai"].requests == []
     assert client.get("/api/v1/usage").json()["analyses_left_today"] == 0
 

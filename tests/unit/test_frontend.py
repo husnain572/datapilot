@@ -15,8 +15,8 @@ def test_shows_success_when_backend_is_healthy(monkeypatch):
     page = AppTest.from_file(APP_PATH).run()
 
     assert not page.exception
-    assert any("Backend connected" in item.value for item in page.markdown)
     assert not page.error
+    assert not any("Backend connected" in item.value for item in page.markdown)
 
 
 def test_shows_error_when_backend_is_unreachable(monkeypatch):
@@ -25,8 +25,7 @@ def test_shows_error_when_backend_is_unreachable(monkeypatch):
     page = AppTest.from_file(APP_PATH).run()
 
     assert not page.exception
-    assert "Can't reach the backend" in page.error[0].value
-    assert not any("Backend connected" in item.value for item in page.markdown)
+    assert "temporarily unavailable" in page.error[0].value
 
 
 def test_streamlit_never_loads_the_backends_ai_keys(monkeypatch, tmp_path):
