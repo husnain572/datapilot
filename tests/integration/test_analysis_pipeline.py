@@ -18,7 +18,8 @@ from backend.services.containment import ATTACKS, run_containment_lab
 from backend.services.executor_client import ExecutionResult, ExecutorClient, ExecutorError
 from backend.services.inference import InferenceClient
 from backend.services.profiling import load_dataframe, profile_dataframe
-from backend.services.usage import DailyLimitReached, UsageTracker
+from backend.services.ai_router import AIRouter, Provider, ProviderSpec
+from backend.services.usage import UsageTracker
 from backend.storage.analyses import AnalysisStore
 
 # Hand-checked: 2*10 + 3*5 = 35 total, and one blank quantity adds nothing.
@@ -106,13 +107,19 @@ class ScriptedSandbox:
         pass
 
 
+def router(client: InferenceClient, data_dir, daily_requests=40, daily_tokens=10**9) -> AIRouter:
+    """One scripted provider, with its own daily allowance."""
+    spec = ProviderSpec("primary", SecretStr("fake"), "https://ai.test/v1", "m", "schema", None, daily_requests, daily_tokens)
+    return AIRouter([Provider(spec, client)], UsageTracker(data_dir))
+
+
 @pytest.fixture
 def analyze(tmp_path):
     def _analyze(ai: ScriptedAI, sandbox: ScriptedSandbox, question="What is total revenue?", limit=40, parent=None):
         now = datetime.now(timezone.utc)
         record = AnalysisRecord(analysis_id=uuid4(), dataset_id=uuid4(), question=question, created_at=now, updated_at=now)
         store = AnalysisStore(tmp_path, 24)
-        pipeline = AnalysisPipeline(ai.client(), sandbox, store, UsageTracker(tmp_path, limit))
+        pipeline = AnalysisPipeline(router(ai.client(), tmp_path, limit), sandbox, store)
         pipeline.run(record, CSV, profile_dataframe(load_dataframe(CSV)), parent)
         return store.get(record.analysis_id)
 
@@ -352,18 +359,19 @@ def test_daily_limit_stops_ai_requests(analyze):
     record = analyze(ai, ScriptedSandbox(), limit=0)
 
     assert record.status == "failed"
-    assert "limit" in record.message
+    assert "allowance has been used up" in record.message
     assert ai.requests == []
 
 
-def test_usage_tracker_counts_up_to_the_limit(tmp_path):
-    tracker = UsageTracker(tmp_path, 2)
+def test_usage_tracker_counts_per_provider_and_survives_restarts(tmp_path):
+    tracker = UsageTracker(tmp_path)
 
-    tracker.count_request()
-    UsageTracker(tmp_path, 2).count_request()  # The count survives a restart.
+    tracker.record_request("primary")
+    tracker.record_tokens("primary", 1500)
+    UsageTracker(tmp_path).record_request("fallback")
 
-    with pytest.raises(DailyLimitReached):
-        tracker.count_request()
+    assert UsageTracker(tmp_path).used("primary") == (1, 1500)
+    assert UsageTracker(tmp_path).used("fallback") == (1, 0)
 
 
 def test_follow_up_questions_include_earlier_context(analyze):
@@ -382,10 +390,12 @@ def test_follow_up_questions_include_earlier_context(analyze):
 
 @pytest.fixture
 def api(tmp_path):
-    settings = Settings(_env_file=None, data_dir=tmp_path, visitor_analyses_per_hour=2, visitor_lab_runs_per_hour=1)
+    settings = Settings(
+        _env_file=None, data_dir=tmp_path, ai_api_key="test-key", visitor_analyses_per_hour=2, visitor_lab_runs_per_hour=1
+    )
     scripted = {"ai": ScriptedAI(draft(), insights()), "sandbox": ScriptedSandbox(run_of(RESULT_OK))}
     app.dependency_overrides[get_settings] = lambda: settings
-    app.dependency_overrides[create_ai] = lambda: scripted["ai"].client()
+    app.dependency_overrides[create_ai] = lambda: router(scripted["ai"].client(), tmp_path)
     app.dependency_overrides[create_executor] = lambda: scripted["sandbox"]
     yield TestClient(app), scripted
     app.dependency_overrides.clear()
@@ -472,9 +482,7 @@ def test_lab_has_its_own_hourly_limit(api):
 
 def test_analysis_is_refused_when_the_daily_allowance_is_nearly_gone(api, tmp_path):
     client, scripted = api
-    tracker = UsageTracker(tmp_path, 40)
-    for _ in range(38):
-        tracker.count_request()
+    UsageTracker(tmp_path).record_tokens("primary", 175_000)  # Less than one analysis's worth left.
 
     response = ask(client, upload(client))
 
@@ -489,7 +497,7 @@ def test_usage_shows_analyses_left_today(api):
 
     usage = client.get("/api/v1/usage").json()
 
-    assert usage["analyses_left_today"] == 13  # 40 requests, about 3 per analysis.
+    assert usage["analyses_left_today"] == 15  # 180,000 tokens a day, about 12,000 per analysis.
     assert usage["resets_at"].endswith(("Z", "+00:00"))
 
 
@@ -542,7 +550,7 @@ def analyze_example(tmp_path) -> AnalysisRecord:
     record = AnalysisRecord(analysis_id=storage.EXAMPLE_ID, dataset_id=uuid4(), question="Total revenue?", created_at=now, updated_at=now)
     store = AnalysisStore(tmp_path / "example-run", 24)
     AnalysisPipeline(
-        ScriptedAI(draft(), insights()).client(), ScriptedSandbox(run_of(RESULT_OK)), store, UsageTracker(tmp_path / "x", 40)
+        router(ScriptedAI(draft(), insights()).client(), tmp_path / "x"), ScriptedSandbox(run_of(RESULT_OK)), store
     ).run(record, CSV, profile_dataframe(load_dataframe(CSV)), None)
     return record
 

@@ -19,15 +19,10 @@ from backend.schemas.analysis import AnalysisRecord, AnalysisRequest, Containmen
 from backend.schemas.datasets import DatasetProfile
 from backend.services.containment import run_containment_lab
 from backend.services.executor_client import ExecutorClient, ExecutorError
-from backend.services.inference import InferenceClient, InferenceError, create_inference_client
+from backend.services.ai_router import AIRouter, analyses_left_today, create_ai_router
+from backend.services.inference import InferenceError
 from backend.services.report import build_report
-from backend.services.usage import (
-    REQUESTS_PER_ANALYSIS,
-    UsageTracker,
-    VisitorLimiter,
-    VisitorLimitReached,
-    next_reset,
-)
+from backend.services.usage import UsageTracker, VisitorLimiter, VisitorLimitReached, next_reset
 from backend.storage.analyses import AnalysisStore, load_example
 
 router = APIRouter(prefix="/api/v1", tags=["analyses"])
@@ -47,7 +42,7 @@ VisitorDep = Annotated[str, Depends(visitor_id)]
 
 
 def usage_tracker(settings: SettingsDep) -> UsageTracker:
-    return UsageTracker(settings.data_dir, settings.ai_daily_request_limit)
+    return UsageTracker(settings.data_dir)
 
 
 def check_visitor(settings: SettingsDep, visitor: str, action: str, hourly_limit: int) -> None:
@@ -61,9 +56,9 @@ def get_analysis_store(settings: SettingsDep) -> AnalysisStore:
     return AnalysisStore(settings.data_dir, settings.dataset_ttl_hours)
 
 
-def create_ai(settings: SettingsDep) -> InferenceClient:
+def create_ai(settings: SettingsDep) -> AIRouter:
     try:
-        return create_inference_client(settings)
+        return create_ai_router(settings, usage_tracker(settings))
     except InferenceError as error:
         raise HTTPException(status.HTTP_503_SERVICE_UNAVAILABLE, error.user_message) from error
 
@@ -100,8 +95,8 @@ class UsageSummary(BaseModel):
 @router.get("/usage")
 def get_usage(settings: SettingsDep) -> UsageSummary:
     """How many analyses can still run today, shared by everyone."""
-    remaining = usage_tracker(settings).remaining()
-    return UsageSummary(analyses_left_today=remaining // REQUESTS_PER_ANALYSIS, resets_at=next_reset())
+    left = analyses_left_today(settings, usage_tracker(settings))
+    return UsageSummary(analyses_left_today=left, resets_at=next_reset())
 
 
 @router.get("/examples/sales")
@@ -121,7 +116,7 @@ def create_analysis(
     visitor: VisitorDep,
     datasets: StoreDep,
     analyses: AnalysisStoreDep,
-    ai: Annotated[InferenceClient, Depends(create_ai)],
+    ai: Annotated[AIRouter, Depends(create_ai)],
     executor: Annotated[ExecutorClient, Depends(create_executor)],
 ) -> AnalysisRecord:
     """Start analyzing a question. Check progress with GET /api/v1/analyses/{id}."""
@@ -135,7 +130,7 @@ def create_analysis(
         if parent is None or parent.dataset_id != request.dataset_id:
             raise HTTPException(status.HTTP_404_NOT_FOUND, "The earlier analysis wasn't found for this dataset.")
 
-    if usage_tracker(settings).remaining() < REQUESTS_PER_ANALYSIS:
+    if analyses_left_today(settings, usage_tracker(settings)) < 1:
         raise HTTPException(
             status.HTTP_429_TOO_MANY_REQUESTS,
             "Today's free analyses have all been used. They reset at midnight UTC. "
@@ -158,7 +153,7 @@ def create_analysis(
     analyses.purge_expired()
     analyses.save(record)
 
-    pipeline = AnalysisPipeline(ai, executor, analyses, usage_tracker(settings))
+    pipeline = AnalysisPipeline(ai, executor, analyses)
     background.add_task(_run_analysis, pipeline, record, datasets.read_csv(request.dataset_id), info.profile, parent)
     return record
 

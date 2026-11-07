@@ -400,6 +400,24 @@ def test_endless_reply_data_is_cut_off():
         FakeVultr(httpx.Response(200, stream=HugeStream())).client().chat(HELLO)
 
 
+def test_reasoning_effort_is_sent_only_when_set():
+    with_effort, without = FakeVultr(ok()), FakeVultr(ok())
+
+    with_effort.client(reasoning_effort="low").chat(HELLO)
+    without.client().chat(HELLO)
+
+    assert with_effort.body()["reasoning_effort"] == "low"
+    assert "reasoning_effort" not in without.body()
+
+
+def test_token_use_of_the_last_call_is_remembered():
+    client = FakeVultr(ok()).client()
+
+    client.chat(HELLO)
+
+    assert client.last_usage.total_tokens == 15
+
+
 # --- Keeping secrets and user data private ---
 
 

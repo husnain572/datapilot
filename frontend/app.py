@@ -10,11 +10,9 @@ import httpx
 import pandas as pd
 import plotly.graph_objects as go
 import streamlit as st
-from dotenv import load_dotenv
-
-# Streamlit doesn't read .env by itself. Real environment variables take priority.
-load_dotenv()
-BACKEND_URL = os.environ.get("BACKEND_URL", "http://127.0.0.1:8000")
+# The frontend never reads .env, so the backend's AI keys can't reach the Streamlit process.
+# On the server, its only setting comes from frontend.env (see scripts/deploy_server.sh).
+BACKEND_URL = os.environ.get("BACKEND_URL") or "http://127.0.0.1:8000"
 DATASETS_URL = f"{BACKEND_URL}/api/v1/datasets"
 ANALYSES_URL = f"{BACKEND_URL}/api/v1/analyses"
 LAB_URL = f"{BACKEND_URL}/api/v1/containment-tests"

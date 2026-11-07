@@ -1,7 +1,8 @@
 """Client for AI models, and the only way DataPilot calls one.
 
-It works with any OpenAI-compatible API, chosen by the AI_BASE_URL setting. We use
-OpenRouter's free models, and Vultr Serverless Inference works with the same code.
+It works with any OpenAI-compatible API. DataPilot uses Groq's free tier first, with Google
+Gemini as an optional fallback (see backend/services/ai_router.py). Vultr Serverless Inference
+and OpenRouter also work with the same code, by changing settings.
 
 Retry rules:
 - 429 (too many requests): wait for the time in the Retry-After header.
@@ -102,6 +103,7 @@ class InferenceClient:
         max_retry_wait_seconds: float = 30,
         max_completion_tokens: int = 8192,
         structured_mode: Literal["schema", "prompt"] = "schema",
+        reasoning_effort: str | None = None,
         transport: httpx.BaseTransport | None = None,
         sleep: Callable[[float], None] = time.sleep,
     ) -> None:
@@ -112,6 +114,9 @@ class InferenceClient:
         self._max_retry_wait_seconds = max_retry_wait_seconds
         self._max_completion_tokens = max_completion_tokens
         self._structured_mode = structured_mode
+        self._reasoning_effort = reasoning_effort
+        # Token use of the most recent successful call, for the daily token budget.
+        self.last_usage = TokenUsage()
         self._sleep = sleep
         # Redirects stay off, so the key can't be forwarded to another address.
         self._http = httpx.Client(
@@ -149,6 +154,9 @@ class InferenceClient:
         }
         if temperature is not None:
             body["temperature"] = temperature
+        if self._reasoning_effort:
+            # Lower effort uses fewer tokens, which matters on a free daily token budget.
+            body["reasoning_effort"] = self._reasoning_effort
         if response_schema is not None:
             body["response_format"] = {
                 "type": "json_schema",
@@ -174,6 +182,7 @@ class InferenceClient:
             raise InferenceResponseError("The reply had no answer text.")
 
         usage = parsed.usage or TokenUsage()
+        self.last_usage = usage
         logger.info(
             "Inference call finished: model=%s latency=%.1fs prompt_tokens=%d completion_tokens=%d",
             self.model,
@@ -322,7 +331,7 @@ class InferenceClient:
 
 
 def create_inference_client(settings: Settings) -> InferenceClient:
-    """Build a client from settings, or explain what's missing."""
+    """Build a client for the primary provider, or explain what's missing."""
     api_key = settings.ai_api_key
     if api_key is None or not api_key.get_secret_value().strip():
         raise InferenceNotConfiguredError(
@@ -336,4 +345,5 @@ def create_inference_client(settings: Settings) -> InferenceClient:
         max_attempts=settings.ai_max_attempts,
         max_completion_tokens=settings.ai_max_completion_tokens,
         structured_mode=settings.ai_structured_mode,
+        reasoning_effort=settings.ai_reasoning_effort,
     )

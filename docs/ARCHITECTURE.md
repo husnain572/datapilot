@@ -6,7 +6,7 @@
 Browser ──HTTP──> Nginx ──> Streamlit (screens)
                                │ REST
                                ▼
-                    FastAPI backend ──HTTPS──> Free AI model (OpenRouter)
+                    FastAPI backend ──HTTPS──> Groq (free), optional Gemini fallback
                   (agent, validation, reports)
                                │ private network + token
                                ▼
@@ -44,7 +44,7 @@ Browser ──HTTP──> Nginx ──> Streamlit (screens)
 
 | Decision | Why |
 |---|---|
-| OpenRouter's free models, through a provider-neutral client | The owner can't pay anything. Vultr Serverless Inference works by changing settings. |
+| Groq's free tier first, with Gemini as an optional fallback | The owner can't pay anything. A small router tries each provider in turn, within its daily request and token allowance. Vultr Serverless Inference works by changing settings. |
 | Plain Python workflow instead of LangGraph | The steps are fixed and retries are limited, so a simple loop is easier to read and debug |
 | Separate executor service | Docker access amounts to root on the server, so neither the backend nor the sandbox gets it |
 | Docker runs only on the Vultr VM | Current Docker Desktop doesn't support macOS 12, and generated code must never run on the owner's Mac |

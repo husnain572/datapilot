@@ -1,6 +1,7 @@
 # --- Secrets: must never reach GitHub ---
 .env
 .env.*
+frontend.env
 !.env.example
 *.pem
 *.key

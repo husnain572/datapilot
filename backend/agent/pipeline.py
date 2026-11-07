@@ -27,10 +27,11 @@ from backend.schemas.datasets import DatasetProfile
 from backend.schemas.inference import ChatMessage
 from backend.services.code_safety import find_problems
 from backend.services.executor_client import ExecutionResult, ExecutorClient, ExecutorError
-from backend.services.inference import InferenceClient, InferenceError, InferenceResponseError
+from backend.services.inference import InferenceError, InferenceResponseError
 from backend.services.number_guard import find_invented, remove_invented
 from backend.services.profiling import load_dataframe
-from backend.services.usage import DailyLimitReached, UsageTracker
+from backend.services.ai_router import AIRouter
+from backend.services.usage import DailyLimitReached
 from backend.services.verification import verify_result
 from backend.storage.analyses import AnalysisStore
 
@@ -95,17 +96,10 @@ def read_run(run: ExecutionResult) -> Outcome:
 
 
 class AnalysisPipeline:
-    def __init__(
-        self,
-        ai: InferenceClient,
-        executor: ExecutorClient,
-        store: AnalysisStore,
-        usage: UsageTracker,
-    ) -> None:
+    def __init__(self, ai: AIRouter, executor: ExecutorClient, store: AnalysisStore) -> None:
         self.ai = ai
         self.executor = executor
         self.store = store
-        self.usage = usage
 
     def run(self, record: AnalysisRecord, csv_text: str, profile: DatasetProfile, parent: AnalysisRecord | None) -> None:
         """Run the whole analysis. The outcome is always saved on the record."""
@@ -132,12 +126,11 @@ class AnalysisPipeline:
         self.store.save(record)
 
     def _ask(self, record: AnalysisRecord, messages: list[ChatMessage], schema: type[SchemaT]) -> SchemaT:
-        try:
-            self.usage.count_request()
-        except DailyLimitReached as error:
-            raise AnalysisStopped(f"{error} Please try again tomorrow.") from error
         record.ai_requests += 1
-        return self.ai.chat_structured(messages, schema, temperature=0)
+        try:
+            return self.ai.chat_structured(messages, schema, temperature=0)
+        except DailyLimitReached as error:
+            raise AnalysisStopped(str(error)) from error
 
     def _investigate(
         self,

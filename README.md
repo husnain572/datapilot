@@ -51,7 +51,7 @@ See [docs/ARCHITECTURE.md](docs/ARCHITECTURE.md) and [SECURITY.md](SECURITY.md).
 | Vultr Cloud Compute | Hosts the frontend, backend, executor, and Docker sandboxes on one Ubuntu 24.04 server (2 vCPU, 4 GB RAM) |
 | Vultr Serverless Inference | Supported by changing settings, but **not used in the live demo** |
 
-The live demo uses [OpenRouter's](https://openrouter.ai) free models to keep the project free to run. To switch to Vultr Serverless Inference, set `AI_BASE_URL=https://api.vultrinference.com/v1`, `AI_MODEL`, `AI_STRUCTURED_MODE=schema`, and `AI_API_KEY`. This path has been tested only with simulated replies.
+AI runs on [Groq's](https://console.groq.com) free tier with the `openai/gpt-oss-120b` model, at no cost. [Google Gemini](https://aistudio.google.com) can be added as an optional free fallback, used only when Groq is busy or out of its daily quota. Any OpenAI-compatible provider works by changing settings, including Vultr Serverless Inference (`AI_BASE_URL=https://api.vultrinference.com/v1`, `AI_STRUCTURED_MODE=schema`). That path has been tested only with simulated replies.
 
 ## Run it locally
 
@@ -59,7 +59,7 @@ You need Python 3.11 and [uv](https://docs.astral.sh/uv/). Run each server in it
 
 ```bash
 uv sync
-cp .env.example .env                           # then add your free OpenRouter key as AI_API_KEY
+cp .env.example .env                           # then add your free Groq key as AI_API_KEY
 uv run uvicorn backend.main:app --reload       # terminal 1: backend
 uv run streamlit run frontend/app.py           # terminal 2: frontend
 uv run pytest                                  # run the tests
@@ -83,7 +83,7 @@ Latest results are in [docs/BUILD_STATUS.md](docs/BUILD_STATUS.md).
 
 ## Known limits
 
-- **Free AI:** OpenRouter allows 50 free requests a day, and one analysis uses about 3. The app stops at 40 a day, and each visitor can run 4 analyses an hour. The page shows how many are left, and the saved example works even when none are.
+- **Free AI:** Groq's free tier allows about 1,000 requests and 200,000 tokens a day for this model. The token budget is the tighter limit, at roughly 15 analyses a day by our estimate. Adding a Gemini key raises this. Each visitor can run 4 analyses an hour. The page shows how many are left, and the saved example works even when none are.
 - **No HTTPS:** the demo runs over plain HTTP on an IP address, so don't upload anything sensitive.
 - **Excel:** only the first sheet of an .xlsx file is read. Older .xls files aren't supported.
 - **One sandbox layer:** containers share the server's kernel. See [SECURITY.md](SECURITY.md).

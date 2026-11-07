@@ -37,9 +37,14 @@ systemctl restart datapilot-backend datapilot-frontend
 
 To change the executor token, change it in `.env`, then re-run the deployment script.
 
-## Replacing the AI key
+## AI keys
 
-Create a new key at https://openrouter.ai/keys, and delete the old one. Then open the file, and replace the value on the `AI_API_KEY=` line:
+Keys go only in the backend's `.env`. The frontend reads `frontend.env`, which holds just `BACKEND_URL`; the deployment script creates it.
+
+- **Groq (required):** create a key at https://console.groq.com/keys and put it on the `AI_API_KEY=` line.
+- **Gemini (optional fallback):** create a key in Google AI Studio and put it on the `AI_FALLBACK_API_KEY=` line.
+
+To replace a key, delete the old one at the provider, then edit the file:
 
 ```bash
 # VULTR SERVER, as root

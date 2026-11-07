@@ -1,4 +1,4 @@
-"""Usage limits, so the free AI allowance and the server can't be used up by accident or abuse."""
+"""Usage limits, so the free AI allowances and the server can't be used up by accident or abuse."""
 
 import hashlib
 import json
@@ -12,36 +12,55 @@ REQUESTS_PER_ANALYSIS = 3
 
 
 class DailyLimitReached(Exception):
-    """Today's AI requests have run out."""
+    """Today's free AI allowance has run out. The message is safe to show."""
+
+
+def _today() -> str:
+    return datetime.now(timezone.utc).date().isoformat()
 
 
 class UsageTracker:
+    """Counts AI requests and tokens per provider per day, in one small JSON file.
+
+    File format: {"2026-11-07": {"groq": {"requests": 3, "tokens": 9000}}}
+    """
+
     _lock = threading.Lock()
 
-    def __init__(self, data_dir: Path, daily_limit: int) -> None:
+    def __init__(self, data_dir: Path) -> None:
         self.path = data_dir / "ai_usage.json"
-        self.daily_limit = daily_limit
 
-    def count_request(self) -> None:
-        """Record one request, or raise DailyLimitReached if none are left today."""
-        today = datetime.now(timezone.utc).date().isoformat()
+    def used(self, provider: str) -> tuple[int, int]:
+        """Today's (requests, tokens) for a provider."""
         with self._lock:
-            used = self._read().get(today, 0)
-            if used >= self.daily_limit:
-                raise DailyLimitReached(f"The limit of {self.daily_limit} AI requests a day has been reached.")
+            entry = self._today_entry().get(provider, {})
+        return int(entry.get("requests", 0)), int(entry.get("tokens", 0))
+
+    def record_request(self, provider: str) -> None:
+        self._add(provider, "requests", 1)
+
+    def record_tokens(self, provider: str, tokens: int) -> None:
+        if tokens > 0:
+            self._add(provider, "tokens", tokens)
+
+    def _add(self, provider: str, field: str, amount: int) -> None:
+        today = _today()
+        with self._lock:
+            entry = self._today_entry()
+            counts = entry.setdefault(provider, {"requests": 0, "tokens": 0})
+            counts[field] = int(counts.get(field, 0)) + amount
             self.path.parent.mkdir(parents=True, exist_ok=True)
-            self.path.write_text(json.dumps({today: used + 1}), encoding="utf-8")
+            # Only today is kept, so the file never grows.
+            self.path.write_text(json.dumps({today: entry}), encoding="utf-8")
 
-    def remaining(self) -> int:
-        today = datetime.now(timezone.utc).date().isoformat()
-        with self._lock:
-            return max(self.daily_limit - self._read().get(today, 0), 0)
-
-    def _read(self) -> dict[str, int]:
+    def _today_entry(self) -> dict[str, dict[str, int]]:
         try:
-            return json.loads(self.path.read_text(encoding="utf-8"))
+            data = json.loads(self.path.read_text(encoding="utf-8"))
         except (OSError, ValueError):
             return {}
+        entry = data.get(_today()) if isinstance(data, dict) else None
+        # Files from before providers were tracked held a plain request count.
+        return entry if isinstance(entry, dict) else {}
 
 
 def next_reset() -> datetime:

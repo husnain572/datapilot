@@ -2,6 +2,13 @@
 
 **Last updated:** Nov 7, 2026
 
+## In progress: Groq instead of OpenRouter (branch `groq-provider`, not deployed)
+
+- **Providers:** Groq's free tier (`openai/gpt-oss-120b`) is the primary provider, and Google Gemini (`gemini-3.8-flash`) is an optional fallback, used only when its key is set.
+- **Budgets:** each provider has its own daily request and token allowance. The app stops before a provider's free limit is reached.
+- **Keys:** they stay in the backend's `.env`. The frontend no longer reads `.env`.
+- **Tests:** 351 passed. Not yet tested with a real Groq or Gemini key.
+
 ## Latest changes (Nov 7, 2026)
 
 - **Open access:** no access code. There are hourly limits for each visitor, a shared daily AI limit, an "analyses left today" counter, and a saved example analysis that uses no AI.

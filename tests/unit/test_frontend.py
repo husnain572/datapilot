@@ -27,3 +27,20 @@ def test_shows_error_when_backend_is_unreachable(monkeypatch):
     assert not page.exception
     assert "Can't reach the backend" in page.error[0].value
     assert not any("Backend connected" in item.value for item in page.markdown)
+
+
+def test_streamlit_never_loads_the_backends_ai_keys(monkeypatch, tmp_path):
+    """The frontend must not read .env, which holds the backend's AI keys."""
+    import os
+
+    (tmp_path / ".env").write_text("AI_API_KEY=should-not-load\nAI_FALLBACK_API_KEY=nor-this\n")
+    monkeypatch.chdir(tmp_path)
+    monkeypatch.delenv("AI_API_KEY", raising=False)
+    monkeypatch.delenv("AI_FALLBACK_API_KEY", raising=False)
+    monkeypatch.setattr(httpx, "get", Mock(return_value=Mock(status_code=200, json=lambda: {})))
+
+    page = AppTest.from_file(APP_PATH).run()
+
+    assert not page.exception
+    assert "AI_API_KEY" not in os.environ
+    assert "AI_FALLBACK_API_KEY" not in os.environ

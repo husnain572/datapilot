@@ -31,9 +31,17 @@ if ! grep -q '^EXECUTOR_TOKEN=.' "$ENV_FILE"; then
   printf 'EXECUTOR_TOKEN=%s\n' "$(openssl rand -hex 32)" >> "$ENV_FILE"
 fi
 add_setting EXECUTOR_URL http://127.0.0.1:8100
-grep -q '^AI_API_KEY=.' "$ENV_FILE" || echo "WARNING: AI_API_KEY isn't set in $ENV_FILE, so analyses won't run."
 # The executor gets only its token, not the rest of .env.
 ( umask 077; grep '^EXECUTOR_TOKEN=' "$ENV_FILE" > /etc/datapilot/executor.env )
+
+echo "== Keeping AI keys out of the frontend"
+# The frontend gets only the backend's address, never .env with its AI keys.
+( umask 027; printf 'BACKEND_URL=%s\n' "$(grep '^BACKEND_URL=' "$ENV_FILE" | cut -d= -f2- || true)" > "$APP/frontend.env" )
+sed -i 's/^BACKEND_URL=$/BACKEND_URL=http:\/\/127.0.0.1:8000/' "$APP/frontend.env"
+chown deploy:deploy "$APP/frontend.env"
+install -d /etc/systemd/system/datapilot-frontend.service.d
+printf '[Service]\nEnvironmentFile=\nEnvironmentFile=%s/frontend.env\n' "$APP" > /etc/systemd/system/datapilot-frontend.service.d/no-secrets.conf
+grep -q '^AI_API_KEY=.' "$ENV_FILE" || echo "WARNING: AI_API_KEY (Groq) isn't set in $ENV_FILE, so analyses won't run."
 
 echo "== Building the sandbox image"
 docker build -q -t datapilot-sandbox:1 "$APP/sandbox" >/dev/null
